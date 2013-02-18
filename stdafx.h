@@ -10,8 +10,15 @@
 #define WIN32_LEAN_AND_MEAN             // Wyklucz rzadko u¿ywane rzeczy z nag³ówków systemu Windows
 // Pliki nag³ówkowe systemu Windows:
 #include <windows.h>
+#include <process.h>
+#include <iostream>
+#include <fcntl.h>
+#include <io.h>
 #include <thread>
 #include <iostream>
+#include <cstring>
+#include <conio.h>
+#include <winsock.h>
 
 
 
