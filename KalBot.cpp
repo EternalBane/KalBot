@@ -4,3 +4,8 @@
 #include "stdafx.h"
 
 
+WORD mainThread()
+{
+	AllocConsole();
+	cout << "test";
+}
