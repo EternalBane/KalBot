@@ -7,5 +7,6 @@
 WORD mainThread()
 {
 	AllocConsole();
-	cout << "test";
+	std::cout << "test";
+	return NULL;
 }

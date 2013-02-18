@@ -11,6 +11,7 @@
 // Pliki nag³ówkowe systemu Windows:
 #include <windows.h>
 #include <thread>
+#include <iostream>
 
 
 
