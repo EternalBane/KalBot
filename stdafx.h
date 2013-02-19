@@ -15,7 +15,6 @@
 #include <fcntl.h>
 #include <io.h>
 #include <thread>
-#include <iostream>
 #include <cstring>
 #include <conio.h>
 #include <winsock.h>

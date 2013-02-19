@@ -78,19 +78,19 @@ bool DLLDumper::setDLL(wstring dllName)
 
     if(ntHeader->Signature != IMAGE_NT_SIGNATURE)
         return 0;
-	cout << "Getting EAT\n";
+
     // EAT Data
 
     ied = reinterpret_cast<PIMAGE_EXPORT_DIRECTORY>(dllBase + ntHeader->OptionalHeader.DataDirectory[EAT].VirtualAddress);
-	cout << "Getting IED\n";
+
     baseOrdinalsAddress = reinterpret_cast<PWORD>(dllBase + ied->AddressOfNameOrdinals);
     baseFunctionsAddress = reinterpret_cast<PDWORD>(dllBase + ied->AddressOfFunctions);
     baseNameAddress = reinterpret_cast<char**>(dllBase + ied->AddressOfNames);
-	cout << "Base Addressess\n";
+
     char **tmp = baseNameAddress;
     char *name;
     PDWORD address;
-	cout << "Dumping data\n";
+
     for(WORD i = 0 ; i < ied->NumberOfFunctions ; i++)
     {
         name = reinterpret_cast<char*>(*tmp + (DWORD)dllBase);
@@ -99,8 +99,7 @@ bool DLLDumper::setDLL(wstring dllName)
         address = reinterpret_cast<PDWORD>(dllBase + baseFunctionsAddress[baseOrdinalsAddress[i]]);
         dumpedEAT.insert(make_pair(name,address));
         tmp++;
-    }
-	cout << "Getting IAT\n";
+    };
     // IAT Data
     iad = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(dllBase + ntHeader->OptionalHeader.DataDirectory[IAT].VirtualAddress);
     if(!(iad->Name))

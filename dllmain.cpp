@@ -23,3 +23,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	return TRUE;
 }
 
+extern "C" __declspec(dllexport) void dummy(void){
+    return;
+}

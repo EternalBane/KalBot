@@ -3,6 +3,9 @@
 
 #include "stdafx.h"
 #include "DLLDumper.h"
+#include "detours.h"
+
+#pragma comment(lib, "detours.lib")
 
 using namespace std;
 
@@ -13,9 +16,11 @@ myrecv NewRecv = NULL, OldRecv = NULL;
 int WINAPI fRecv(SOCKET s, char *buf, int len, int flags)
 {
 	cout << "Hooked recv: ";
-	for(int i=0;i<len;i++)
-		cout << hex << buf[i] << ' ';
-	return OldRecv(s,buf,len,flags);
+	for(int i=0;i<strlen(buf);i++)
+		cout << hex << static_cast<WORD>(buf[i]) << ' ';
+	cout << '\n';
+	//return OldRecv(s,buf,len,flags);
+	return len;
 }
 
 int g_hCrtIn		= NULL;
@@ -33,51 +38,57 @@ void myAllocConsole(wstring consoleName)
 	*stdin = *conIn;
 	*stdout = *conOut;
 	SetConsoleTitle(consoleName.c_str());
+}
+
+void *DetourFunction (BYTE *src, const BYTE *dst, const int len)
+{
+    BYTE *jmp;
+    DWORD dwback;
+    DWORD jumpto, newjump;
+
+    VirtualProtect(src,len,PAGE_READWRITE,&dwback);
+    
+    if(src[0] == 0xE9)
+    {
+        jmp = (BYTE*)malloc(10);
+        jumpto = (*(DWORD*)(src+1))+((DWORD)src)+5;
+        newjump = (jumpto-(DWORD)(jmp+5));
+        jmp[0] = 0xE9;
+       *(DWORD*)(jmp+1) = newjump;
+        jmp += 5;
+        jmp[0] = 0xE9;
+       *(DWORD*)(jmp+1) = (DWORD)(src-jmp);
+    }
+    else
+    {
+        jmp = (BYTE*)malloc(5+len);
+        memcpy(jmp,src,len);
+        jmp += len;
+        jmp[0] = 0xE9;
+       *(DWORD*)(jmp+1) = (DWORD)(src+len-jmp)-5;
+    }
+    src[0] = 0xE9;
+   *(DWORD*)(src+1) = (DWORD)(dst - src) - 5;
+
+    for(int i = 5; i < len; i++)
+        src[i] = 0x90;
+    VirtualProtect(src,len,dwback,&dwback);
+    return (jmp-len);
 } 
-
-typedef INT (WINAPI *SendPtr)(SOCKET sock, CHAR* buf, INT len, INT flags);
-typedef INT (WINAPI *RecvPtr)(SOCKET sock, CHAR* buf, INT len, INT flags);
-
-INT WINAPI OurSend (SOCKET sock, CHAR* buf, INT len, INT flags);
-INT WINAPI OurRecv (SOCKET sock, CHAR* buf, INT len, INT flags);
-
-VOID *Detour(BYTE *source, CONST BYTE *destination, CONST INT length);
-
-SendPtr RealSend;
-RecvPtr RealRecv;
-
-VOID *Detour(BYTE *source, CONST BYTE *destination, CONST INT length)
-{
-	DWORD back;
-	BYTE *jmp = (BYTE*)malloc(length + 5);
-
-	VirtualProtect(source, length, PAGE_READWRITE, &back);
-	memcpy(jmp, source, length);
-	jmp += length;
-
-	jmp[0] = 0xE9;
-	*(DWORD*)(jmp + 1) = (DWORD)(source + length - jmp) - 5;
-
-	source[0] = 0xE9;
-	*(DWORD*)(source + 1) = (DWORD)(destination - source) - 5;
-
-	VirtualProtect(source, length, back, &back);
-
-	return (jmp - length);
-}
-
-INT WINAPI OurRecv(SOCKET sock, CHAR* buf, INT len, INT flags)
-{
-	cout << "Received: ";
-	for(int i=0;i<strlen(buf);i++)
-		cout <<  hex << static_cast<WORD>(buf[i]) << ' ';
-	cout << '\n';
-	return RealRecv(sock, buf, len, flags);
-}
 
 unsigned int __stdcall mainThread(void * pParams)
 {
 	myAllocConsole(L"Test Console");
+	//OldRecv = (myrecv)GetProcAddress(GetModuleHandle(L"ws2_32.dll"),"recv");
+	//cout << "Recv orig: " << &OldRecv << " Recv GPA: " << GetProcAddress(GetModuleHandle(L"ws2_32.dll"),"recv") << '\n';
+	//cout << "fRecv: " << &fRecv;
+
+	//
+	////OldRecv = (myrecv)DetourFunction((BYTE*)OldRecv, (BYTE*)fRecv, 5);
+	//cout << "\nAfter hooking...\n";
+	//cout << "Recv orig: " << &OldRecv << " Recv GPA: " << GetProcAddress(GetModuleHandle(L"ws2_32.dll"),"recv") << '\n';
+	//cout << "fRecv: " << &fRecv;
+
 	DLLDumper dll;
 	map<string,PDWORD>funcs;
 	map<string,PDWORD>::iterator it;
