@@ -3,6 +3,8 @@
 #include "Memory.h"
 #include <iostream>
 #include <winsock.h>
+#include <stdarg.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -14,14 +16,36 @@ using namespace std;
 #define recvIAT 0x00725468
 #define sendIAT 0x0072546C
 
-enum color {
+static enum Color
+{
 	orange = 16594,
 	lightblue = 15073034,
 	violett = 12615808,
 	green = 32768,
 	pink = 16751615,
 	blue = 15453831,
-	red = 255 };
+	red = 255
+};
+
+struct Monster
+{
+	DWORD id;
+	WORD classe;
+	DWORD x;
+	DWORD y;
+	WORD z;
+	WORD HP;
+};
+
+struct Player
+{
+	DWORD id;
+	char name[16];
+	BYTE classe;
+	DWORD x;
+	DWORD y;
+	WORD z;
+};
 
 class KalTools
 {
@@ -32,6 +56,7 @@ private:
 	static DWORD chatAdd;
 	static DWORD noticeAdd;
 public:
+	static SOCKET sock;
 
 	KalTools(){}
 	~KalTools(){}
@@ -54,6 +79,7 @@ public:
 	static void Chat(int color,char* mFormat,...);
 	static void Notice(int color,char* mFormat,...);
 
-    static void HookIt();
+	static void HookIt();
+	static void interpreter(char *buf);
 };
 

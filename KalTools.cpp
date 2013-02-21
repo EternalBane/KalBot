@@ -17,6 +17,8 @@ FARPROC KalTools::sendAddress = GetProcAddress(GetModuleHandle(L"ws2_32.dll"),"s
 DWORD KalTools::chatAdd = 0;
 DWORD KalTools::noticeAdd = 0;
 
+SOCKET KalTools::sock = 0;
+
 void KalTools::Log(string str)
 {
 	cout << str << '\n';
@@ -31,9 +33,11 @@ void KalTools::Log(char *str)
 
 void KalTools::LogPacket(char *str, LPCSTR type)
 {
-	cout << type << ' ';
-	for(int i=0;i<strlen(str);i++)
-		cout << hex << "0x" << static_cast<WORD>(str[i]) << ' ';
+	cout << type;
+	printf("0x%02x",str[2]);
+	WORD size;
+	memcpy(&size,str,2);
+	cout << " size: " << size;
 	cout << '\n';
 }
 
@@ -108,6 +112,7 @@ void KalTools::hookRecv()
 int fRecvIAT(SOCKET s, char *buf, int len, int flags)
 {
 	KalTools::LogPacket(buf,"Recv: ");
+	KalTools::interpreter(buf);
 	return oldRecv(s,buf,len,flags);
 }
 
@@ -128,7 +133,9 @@ void KalTools::hookIATRecv()
 
 int fSendIAT(SOCKET s, char *buf, int len, int flags)
 {
+	KalTools::sock = s;
 	KalTools::LogPacket(buf,"Send: ");
+	cout << ' ' << len << " Flags: " << flags << '\n';
 	return oldSend(s,buf,len,flags);
 }
 
@@ -144,9 +151,110 @@ void KalTools::hookIATSend()
 	VirtualProtect(address, sizeof(DWORD), oldprot, (DWORD *)&oldprot2);
 }
 
-void KalTools::send(DWORD type, LPCSTR format...)
-{
+// ------ End of send hooks ----- //
 
+int countSize(LPCSTR str)
+{
+	int result = 0;
+	for(int i=0;i<strlen(str);i++)
+	{
+		if(str[i]=='b')
+			result += 1;
+		if(str[i]=='d')
+			result += 4;
+	}
+	return result;
 }
 
-// ------ End of send hooks ----- //
+void KalTools::send(DWORD type, LPCSTR format...)
+{
+	char SendText[] = "PACKET TYPE:0x%02x FORMAT:%s\n";
+	DWORD temp = 0;
+	char *packet;
+
+	printf(SendText,type,format);
+
+	va_list args;
+	va_start(args, format);
+	int i,s=0;
+	char* something;
+	packet = new char[countSize(format)];
+	for (i=0;i<strlen(format);i++)
+	{
+		switch (format[i])
+		{
+		case 'b': //BYTE
+			memcpy(packet+s,format+s,1);
+			s+=1;
+			temp=va_arg( args, BYTE);
+			printf(" %d: %d\n",i+1,temp);
+			break;
+		case 'd': //DWORD
+			memcpy(packet+s,format+s,4);
+			s+=4;
+			temp=(DWORD)va_arg( args, DWORD);
+			printf(" %d: %d\n",i+1,temp);
+			break;       
+		case 'w': //WORD
+			printf(" %d: %d\n",i+1,(WORD)va_arg( args, DWORD));
+			break;
+		case 's': //STRING
+			something=va_arg( args, char*);
+			printf(" %d: %s\n",i+1,something);
+			break;
+		case 'm':
+			printf(" %d: %d\n",i+1,(DWORD)va_arg( args, DWORD));
+			break;
+		}
+	}
+	va_end(args);
+	fSendIAT(KalTools::sock,packet,countSize(format),0);
+}
+
+void KalTools::interpreter(char *packet)
+{
+	Player player;
+	Monster monster;
+	if (packet[2] == 0x32)
+	{
+		//player appear
+		memcpy((void*)&player.id,(void*)((DWORD)packet+3),4); // player id
+		memcpy((void*)&player.name,(void*)((DWORD)packet+7),16); // player name
+		int namelen = strlen(player.name);
+		memcpy(&player.classe,(packet+8+namelen),1); // player class
+		memcpy(&player.x,(packet+9+namelen),4); // player x
+		memcpy(&player.y,(void*)((DWORD)packet+13+namelen),4); // player y
+		memcpy(&player.z,(packet+17+namelen),2); // player z
+		if(namelen>2)
+		{
+			char playerClass[7];
+			switch(player.classe)
+			{
+			case 0:
+				strcpy_s(playerClass,"Knight");
+				break;
+			case 1:
+				strcpy_s(playerClass,"Mage");
+				break;
+			case 2:
+				strcpy_s(playerClass,"Archer");
+				break;
+			case 3:
+				strcpy_s(playerClass,"Thief");
+			}
+			Chat(Color::pink," Player: %s ID: %d",player.name,player.id);
+			Chat(Color::pink," Class: %s X: %d Y: %d Z: %d",playerClass,player.x,player.y,player.z);
+		}
+	}
+	if (packet[2] == 0x33)
+	{
+		//mob apear
+		memcpy(&(monster.classe),(packet+3),2);
+		memcpy(&(monster.id),(packet+5),4);
+		memcpy(&(monster.x),(packet+9),4);
+		memcpy(&(monster.y),(packet+13),4);
+		memcpy(&(monster.z),(packet+17),2);
+		memcpy(&(monster.HP),(packet+19),2);
+		Chat(Color::violett," Mob: %d(%d) X: %d Y: %d Z: %d HP: %d",monster.classe,monster.id,monster.x,monster.y,monster.z,monster.HP);
+	}
+}
