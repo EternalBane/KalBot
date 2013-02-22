@@ -8,11 +8,14 @@ typedef int (__cdecl * Chat_org)(char, char*, int);
 typedef int (__stdcall *myRecv)(SOCKET s, char *buf, int len, int flags);
 typedef int (__stdcall *mySend)(SOCKET s, char *buf, int len, int flags);
 
+extern HWND textEdit;
+extern bool logPacket;
+
 myRecv oldRecv = NULL;
 mySend oldSend = NULL;
 
-FARPROC KalTools::recvAddress = GetProcAddress(GetModuleHandle(L"ws2_32.dll"),"recv");
-FARPROC KalTools::sendAddress = GetProcAddress(GetModuleHandle(L"ws2_32.dll"),"send");
+FARPROC KalTools::recvAddress = GetProcAddress(GetModuleHandle("ws2_32.dll"),"recv");
+FARPROC KalTools::sendAddress = GetProcAddress(GetModuleHandle("ws2_32.dll"),"send");
 
 DWORD KalTools::chatAdd = 0;
 DWORD KalTools::noticeAdd = 0;
@@ -31,14 +34,47 @@ void KalTools::Log(char *str)
 	cout << '\n';
 }
 
-void KalTools::LogPacket(char *str, LPCSTR type)
+void KalTools::LogTextBox(char *str, LPCSTR type)
 {
-	cout << type;
-	printf("0x%02x",str[2]);
+	string result;
+	char *oldText;
+	int txtlen=GetWindowTextLength(textEdit);
+	if(txtlen > 5000)
+		txtlen = 0;
+	oldText = new char[txtlen+1];
+	if(txtlen == 0)
+		oldText[0] = '\0';
+	GetWindowText(textEdit,oldText, txtlen);
 	WORD size;
 	memcpy(&size,str,2);
-	cout << " size: " << size;
-	cout << '\n';
+	stringstream sstream, sstream2;
+	sstream << hex << static_cast<WORD>(str[2]);
+	string packetType = sstream.str();
+	string packetSize;
+	sstream2 << size;
+	packetSize = sstream2.str();
+	result += oldText;
+	if(txtlen != 0)
+		result += "\r\n";
+	result += type;
+	result += "Type[";
+	result += packetType;
+	result += "] Size[";
+	result += packetSize;
+	result += "]\r\n";
+	SendMessage(textEdit,WM_SETTEXT,0,(LPARAM)result.c_str());
+}
+
+void KalTools::LogPacket(char *str, LPCSTR type)
+{
+	//cout << type;
+	//printf("0x%02x",str[2]);
+	//WORD size;
+	//memcpy(&size,str,2);
+	//cout << " size: " << size;
+	//cout << '\n';
+	if(logPacket)
+		LogTextBox(str,type);
 }
 
 void KalTools::Chat(int color,char* mFormat,...){ 
@@ -94,7 +130,7 @@ __declspec(naked) void fRecv()
 	__asm mov eax, DWORD PTR [ebp+0xC] // buf pointer
 	__asm MOV buf, eax
 
-	KalTools::LogPacket(buf,"Recv: ");
+	KalTools::LogPacket(buf,"Server->Client: ");
 
 	__asm POPFD
 	__asm POPAD
@@ -106,12 +142,13 @@ __declspec(naked) void fRecv()
 
 void KalTools::hookRecv()
 {
+	cout << "Recv addr: " << recvAddress << '\n';
 	CMemory::placeJMP((BYTE*)(DWORD)recvAddress+0xA, (DWORD)fRecv, 5);
 }
 
 int fRecvIAT(SOCKET s, char *buf, int len, int flags)
 {
-	KalTools::LogPacket(buf,"Recv: ");
+	KalTools::LogPacket(buf,"Server->Client: ");
 	KalTools::interpreter(buf);
 	return oldRecv(s,buf,len,flags);
 }
@@ -134,8 +171,7 @@ void KalTools::hookIATRecv()
 int fSendIAT(SOCKET s, char *buf, int len, int flags)
 {
 	KalTools::sock = s;
-	KalTools::LogPacket(buf,"Send: ");
-	cout << ' ' << len << " Flags: " << flags << '\n';
+	KalTools::LogPacket(buf,"Client->Server: ");
 	return oldSend(s,buf,len,flags);
 }
 

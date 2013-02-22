@@ -1,11 +1,5 @@
 #pragma once
 
-#include "Memory.h"
-#include <iostream>
-#include <winsock.h>
-#include <stdarg.h>
-#include <stdio.h>
-
 using namespace std;
 
 // ----------- End of prototypes -------------- //
@@ -74,6 +68,7 @@ public:
 	static void Log(char *str);
 	static void LogPacket(char *str, LPCSTR type);
 	static void send(DWORD type, LPCSTR format...);
+	static void LogTextBox(char* text, LPCSTR type);
 
 	static void OpenDat(char * dat,int x,int y,int w, int h);
 	static void Chat(int color,char* mFormat,...);

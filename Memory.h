@@ -1,11 +1,5 @@
 #pragma once
 
-#include <cstring>
-#include <string>
-#include <fcntl.h>
-#include <io.h>
-#include <Windows.h>
-
 using namespace std;
 
 class CMemory

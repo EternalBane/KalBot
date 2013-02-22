@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "Memory.h"
-#include <iostream>
 
 using namespace std;
 
@@ -17,24 +16,24 @@ void CMemory::myAllocConsole(wstring consoleName)
 	*stdin = *In;
 	*stdout = *Out;
 
-	SetConsoleTitle(consoleName.c_str());
+	SetConsoleTitleW(consoleName.c_str());
 }
 
 bool CMemory::bDataCompare(const BYTE* pData, const BYTE* bMask, const char* szMask)
 {
-    for(;*szMask;++szMask,++pData,++bMask)
-        if(*szMask=='x' && *pData!=*bMask ) 
-            return false;
-    return (*szMask) == NULL;
+	for(;*szMask;++szMask,++pData,++bMask)
+		if(*szMask=='x' && *pData!=*bMask ) 
+			return false;
+	return (*szMask) == NULL;
 }
 
 DWORD CMemory::dwFindPattern(DWORD dwAddress,DWORD dwLen,BYTE *bMask,char * szMask)
 {
-    for(DWORD i=0; i < dwLen; i++)
-        if( CMemory::bDataCompare( (BYTE*)( dwAddress+i ),bMask,szMask) )
-            return (DWORD)(dwAddress+i);
-    
-    return 0;
+	for(DWORD i=0; i < dwLen; i++)
+		if( CMemory::bDataCompare( (BYTE*)( dwAddress+i ),bMask,szMask) )
+			return (DWORD)(dwAddress+i);
+
+	return 0;
 }
 
 
@@ -50,17 +49,20 @@ LPVOID CMemory::MemcpyEx(DWORD lpDest, DWORD lpSource, int len)
 }
 
 void CMemory::placeJMP(BYTE *pAddress, DWORD dwJumpTo, DWORD dwLen){
-     DWORD dwOldProtect, dwBkup, dwRelAddr;
+	DWORD dwOldProtect, dwBkup, dwRelAddr;
 
-     VirtualProtect(pAddress, dwLen, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+	VirtualProtect(pAddress, dwLen, PAGE_EXECUTE_READWRITE, &dwOldProtect);
+	cout << "Placing jump\n";
 
-     dwRelAddr = (DWORD) (dwJumpTo - (DWORD) pAddress) - 5;    
-     *pAddress = 0xE9; // placing JMP opcode at dest address
-     *((DWORD *)(pAddress + 0x1)) = dwRelAddr; // placing JMP address to our hooked func
+	dwRelAddr = (DWORD) (dwJumpTo - (DWORD) pAddress) - 5;   
+	cout << pAddress << " " << *pAddress << '\n';
+	*pAddress = 0xE9; // placing JMP opcode at dest address
+	cout << "Placing jump\n";
+	*((DWORD *)(pAddress + 0x1)) = dwRelAddr; // placing JMP address to our hooked func
+	cout << "Placing jump\n";
+	// Overwrite the rest of the bytes with NOPs
+	for(DWORD x = 0x5; x < dwLen; x++)
+		*(pAddress + x) = 0x90; 
 
-     // Overwrite the rest of the bytes with NOPs
-     for(DWORD x = 0x5; x < dwLen; x++)
-          *(pAddress + x) = 0x90; 
-
-     VirtualProtect(pAddress, dwLen, dwOldProtect, &dwBkup);
+	VirtualProtect(pAddress, dwLen, dwOldProtect, &dwBkup);
 }

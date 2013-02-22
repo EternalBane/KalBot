@@ -11,7 +11,20 @@
 // Pliki nag³ówkowe systemu Windows:
 #include <process.h>
 #include <Windows.h>
+#include <cstring>
+#include <string>
+#include <fcntl.h>
+#include <io.h>
+#include <iostream>
+#include <winsock.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <sstream>
+#include <ctime>
 
+#include "Memory.h"
+#include "KalTools.h"
 
+#pragma comment(lib, "user32.lib")
 
 // TODO: W tym miejscu odwo³aj siê do dodatkowych nag³ówków wymaganych przez program

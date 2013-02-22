@@ -4,7 +4,7 @@
 
 DLLDumper::DLLDumper(wstring dllName)
 {
-    if(!(dllHandler = GetModuleHandle(dllName.c_str())))
+    if(!(dllHandler = GetModuleHandleW(dllName.c_str())))
 		return;
 
     if(dllHandler == NULL)
@@ -64,7 +64,7 @@ DLLDumper::DLLDumper(wstring dllName)
 
 bool DLLDumper::setDLL(wstring dllName)
 {
-    if(!(dllHandler = GetModuleHandle(dllName.c_str())))
+    if(!(dllHandler = GetModuleHandleW(dllName.c_str())))
         return 0;
 
     if(dllHandler == NULL)
