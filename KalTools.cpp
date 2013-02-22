@@ -27,14 +27,18 @@ void KalTools::Log(string str)
 	cout << str << '\n';
 }
 
-void KalTools::Log(char *str)
+void KalTools::Log(const char* mFormat, ... )
 {
-	for(int i=0;i<strlen(str);i++)
-		cout << str[i];
-	cout << '\n';
+	char* mText = new char[255];
+	va_list args;
+	va_start(args, mFormat);
+	vsprintf_s(mText,255,mFormat,args);
+	va_end(args);
+
+	printf(mFormat,mText);
 }
 
-void KalTools::LogTextBox(char *str, LPCSTR type)
+void KalTools::LogTextBoxPacket(char *str, LPCSTR type)
 {
 	string result;
 	char *oldText;
@@ -62,22 +66,49 @@ void KalTools::LogTextBox(char *str, LPCSTR type)
 	result += "] Size[";
 	result += packetSize;
 	result += "]\r\n";
+
 	SendMessage(textEdit,WM_SETTEXT,0,(LPARAM)result.c_str());
+	SendMessage(textEdit, LOWORD(WM_VSCROLL), SB_BOTTOM, 0);
+
+	delete[]oldText;
+}
+
+void KalTools::LogTextBox(const char *mFormat, ...)
+{
+	char* mText = new char[255];
+	va_list args;
+	va_start(args, mFormat);
+	vsprintf_s(mText,255,mFormat,args);
+	va_end(args);
+
+	string result;
+	char *oldText;
+	int txtlen=GetWindowTextLength(textEdit);
+	if(txtlen > 5000)
+		txtlen = 0;
+	oldText = new char[txtlen+1];
+	if(txtlen == 0)
+		oldText[0] = '\0';
+	GetWindowText(textEdit,oldText, txtlen);
+	result += oldText;
+	if(txtlen != 0)
+		result += "\r\n";
+	result += mText;
+
+	SendMessage(textEdit,WM_SETTEXT,0,(LPARAM)result.c_str());
+	SendMessage(textEdit, LOWORD(WM_VSCROLL), SB_BOTTOM, 0);
+
+	delete[]mText;
 }
 
 void KalTools::LogPacket(char *str, LPCSTR type)
 {
-	//cout << type;
-	//printf("0x%02x",str[2]);
-	//WORD size;
-	//memcpy(&size,str,2);
-	//cout << " size: " << size;
-	//cout << '\n';
 	if(logPacket)
-		LogTextBox(str,type);
+		LogTextBoxPacket(str,type);
 }
 
-void KalTools::Chat(int color,char* mFormat,...){ 
+void KalTools::Chat(int color,char* mFormat,...)
+{ 
 	char* mText = new char[255];
 	va_list args;
 	va_start(args, mFormat);
@@ -85,9 +116,11 @@ void KalTools::Chat(int color,char* mFormat,...){
 	va_end(args);
 
 	((Chat_org)chatAdd)(0,mText,color);
+	delete[]mText;
 }
 
-void KalTools::Notice(int color,char* mFormat,...){
+void KalTools::Notice(int color,char* mFormat,...)
+{
 	char* mText = new char[255];
 	va_list args;
 	va_start(args, mFormat);
@@ -95,6 +128,7 @@ void KalTools::Notice(int color,char* mFormat,...){
 	va_end(args);
 
 	((Notice_org)noticeAdd)(mText,color);
+	delete[]mText;
 }
 
 void KalTools::HookIt()
@@ -104,14 +138,15 @@ void KalTools::HookIt()
 	char * mChat = "xxx????????xxxx"; // mask //
 
 	chatAdd = CMemory::dwFindPattern( 0x00400000,0x00700000,pChat,mChat);
-	printf("[Chat Address]: 0x%x\n",chatAdd);
+	LogTextBox("[Chat Address]: 0x%x\n",chatAdd);
+
 
 	// Notice BYTE pattern , char * mask //
 	BYTE pNotice[] = {0x55,0x8B,0xEC,0x83,0x3D,0x5C,0x2B,0x86,0x00,0x00,0x74,0x34,0x8B,0x45,0x0C,0x50}; // pattern //
 	char * mNotice = "xxx???????xxxxxx"; // mask //
 
 	noticeAdd = CMemory::dwFindPattern( 0x00400000,0x00700000,pNotice,mNotice);  // obtain address //
-	printf("[Notice Address]: 0x%x\n",noticeAdd);
+	LogTextBox("[Notice Address]: 0x%x\n",noticeAdd);
 }
 
 // ------------- Hooking --------------- //
@@ -142,7 +177,6 @@ __declspec(naked) void fRecv()
 
 void KalTools::hookRecv()
 {
-	cout << "Recv addr: " << recvAddress << '\n';
 	CMemory::placeJMP((BYTE*)(DWORD)recvAddress+0xA, (DWORD)fRecv, 5);
 }
 
@@ -157,7 +191,7 @@ void KalTools::hookIATRecv()
 {
 	PDWORD address;
 	address = reinterpret_cast<PDWORD>(recvIAT);
-	oldRecv = (myRecv)recvAddress;
+	oldRecv = (myRecv)*address;
 	DWORD oldprot, oldprot2;
 
 	VirtualProtect(address, sizeof(DWORD), PAGE_READWRITE, (DWORD *)&oldprot);
@@ -179,7 +213,7 @@ void KalTools::hookIATSend()
 {
 	PDWORD address;
 	address = reinterpret_cast<PDWORD>(sendIAT);
-	oldSend = (mySend)sendAddress;
+	oldSend = (mySend)*address;
 	DWORD oldprot, oldprot2;
 
 	VirtualProtect(address, sizeof(DWORD), PAGE_READWRITE, (DWORD *)&oldprot);
@@ -208,7 +242,7 @@ void KalTools::send(DWORD type, LPCSTR format...)
 	DWORD temp = 0;
 	char *packet;
 
-	printf(SendText,type,format);
+	LogTextBox(SendText,type,format);
 
 	va_list args;
 	va_start(args, format);
@@ -223,23 +257,23 @@ void KalTools::send(DWORD type, LPCSTR format...)
 			memcpy(packet+s,format+s,1);
 			s+=1;
 			temp=va_arg( args, BYTE);
-			printf(" %d: %d\n",i+1,temp);
+			//printf(" %d: %d\n",i+1,temp);
 			break;
 		case 'd': //DWORD
 			memcpy(packet+s,format+s,4);
 			s+=4;
 			temp=(DWORD)va_arg( args, DWORD);
-			printf(" %d: %d\n",i+1,temp);
+			//printf(" %d: %d\n",i+1,temp);
 			break;       
 		case 'w': //WORD
-			printf(" %d: %d\n",i+1,(WORD)va_arg( args, DWORD));
+			//printf(" %d: %d\n",i+1,(WORD)va_arg( args, DWORD));
 			break;
 		case 's': //STRING
 			something=va_arg( args, char*);
-			printf(" %d: %s\n",i+1,something);
+			//printf(" %d: %s\n",i+1,something);
 			break;
 		case 'm':
-			printf(" %d: %d\n",i+1,(DWORD)va_arg( args, DWORD));
+			//printf(" %d: %d\n",i+1,(DWORD)va_arg( args, DWORD));
 			break;
 		}
 	}

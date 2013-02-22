@@ -65,10 +65,11 @@ public:
 	static void hookIATSend();
 
 	static void Log(string str);
-	static void Log(char *str);
+	static void Log(const char* format, ...);
 	static void LogPacket(char *str, LPCSTR type);
 	static void send(DWORD type, LPCSTR format...);
-	static void LogTextBox(char* text, LPCSTR type);
+	static void LogTextBoxPacket(char* text, LPCSTR type);
+	static void LogTextBox(const char* mFormat, ...);
 
 	static void OpenDat(char * dat,int x,int y,int w, int h);
 	static void Chat(int color,char* mFormat,...);

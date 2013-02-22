@@ -34,22 +34,22 @@ LRESULT CALLBACK DLLWindowProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM l
 			logPacket = 0;
 			break;
 		case HACK1:		
-			MessageBox(hwnd, "No Recoil Activated!", "", MB_ICONINFORMATION | MB_OK);
+			MessageBox(hwnd, "Dummy", "", MB_ICONINFORMATION | MB_OK);
 			break;
 		case HACK2:		
-			MessageBox(hwnd, "No Spread Activated!", "", MB_ICONINFORMATION | MB_OK);
+			MessageBox(hwnd, "Dummy", "", MB_ICONINFORMATION | MB_OK);
 			break;
 		case HACK3:			
-			MessageBox(hwnd, "No Bullets Activated!", "", MB_ICONINFORMATION | MB_OK);
+			MessageBox(hwnd, "Dummy", "", MB_ICONINFORMATION | MB_OK);
 			break;
 		case HACK4:
-			MessageBox(hwnd, "Engine ESP Activated!", "", MB_ICONINFORMATION | MB_OK);
+			MessageBox(hwnd, "Dummy", "", MB_ICONINFORMATION | MB_OK);
 			break;
 		case HACK5:
-			MessageBox(hwnd, "Radar Hack Activated!", "", MB_ICONINFORMATION | MB_OK);
+			MessageBox(hwnd, "Dummy", "", MB_ICONINFORMATION | MB_OK);
 			break;
 		case ABOUT:
-			MessageBox(hwnd, "Created by : Crypt @DarkHook", "", MB_ICONINFORMATION | MB_OK);
+			MessageBox(hwnd, "Created by : SeaM", "", MB_ICONINFORMATION | MB_OK);
 			break;
 		}
 		break;
@@ -96,12 +96,12 @@ HMENU CreateDLLWindowMenu()
 	AppendMenu (hMenu, MF_POPUP, (UINT_PTR) hMenuPopup, TEXT("File")); 
 
 	hMenuPopup = CreatePopupMenu();
-	AppendMenu (hMenuPopup, MF_STRING,HACK1, TEXT("No Recoil"));
-	AppendMenu (hMenuPopup, MF_STRING,HACK2, TEXT("No Spread"));
-	AppendMenu (hMenuPopup, MF_STRING,HACK3, TEXT("No Bullets"));
-	AppendMenu (hMenuPopup, MF_STRING,HACK4, TEXT("Engine ESP"));
-	AppendMenu (hMenuPopup, MF_STRING,HACK5, TEXT("Radar Hack"));
-	AppendMenu (hMenu, MF_POPUP, (UINT_PTR) hMenuPopup, TEXT("Hacks")); 
+	AppendMenu (hMenuPopup, MF_STRING,HACK1, TEXT("Dummy"));
+	AppendMenu (hMenuPopup, MF_STRING,HACK2, TEXT("Dummy"));
+	AppendMenu (hMenuPopup, MF_STRING,HACK3, TEXT("Dummy"));
+	AppendMenu (hMenuPopup, MF_STRING,HACK4, TEXT("Dummy"));
+	AppendMenu (hMenuPopup, MF_STRING,HACK5, TEXT("Dummy"));
+	AppendMenu (hMenu, MF_POPUP, (UINT_PTR) hMenuPopup, TEXT("Dummy")); 
 
 	hMenuPopup = CreatePopupMenu();
 	AppendMenu (hMenuPopup, MF_STRING,ABOUT, TEXT("Credits"));
@@ -117,7 +117,7 @@ HWND createTextBox(HWND hwnd)
 	int width = rect.right - rect.left;
 	int height = rect.bottom - rect.top;
 	HWND hText = CreateWindowEx( 0, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
-		0, 0, width, height, hwnd, NULL, (HINSTANCE)GetWindowLongA(hwnd,GWL_HINSTANCE), NULL );
+		0, 0, width-10, height-30, hwnd, NULL, (HINSTANCE)GetWindowLongA(hwnd,GWL_HINSTANCE), NULL );
 	return hText;
 }
 

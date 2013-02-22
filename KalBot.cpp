@@ -31,9 +31,7 @@ DWORD WINAPI windowThread(LPVOID lpParam)
 
 DWORD WINAPI mainThread(void * pParams)
 {
-	Sleep(200);
-	CMemory::myAllocConsole(L"Test Console");
-	//KalTools::hookRecv();
+	Sleep(2000);
 	KalTools::HookIt();
 	KalTools::hookIATRecv();
 	KalTools::hookIATSend();
