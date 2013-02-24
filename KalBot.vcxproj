@@ -41,13 +41,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>C:\Users\SeaM\Documents\visual studio 2012\Projects\KalBot\KalBot;C:\Users\SeaM\Documents\visual studio 2012\Projects\KalBot\KalBot\Tools;C:\Users\SeaM\Documents\visual studio 2012\Projects\KalBot\KalBot\PE Interact;C:\Users\SeaM\Documents\visual studio 2012\Projects\KalBot\KalBot\Hooked;C:\Users\SeaM\Documents\visual studio 2012\Projects\KalBot\KalBot\GUI;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>Create</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;KALBOT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -81,16 +82,16 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="KalTools.h" />
-    <ClInclude Include="MainWindow.h" />
-    <ClInclude Include="Memory.h" />
-    <ClInclude Include="Recv.h" />
-    <ClInclude Include="Send.h" />
+    <ClInclude Include="GUI\MainWindow.h" />
+    <ClInclude Include="Hooked\Recv.h" />
+    <ClInclude Include="Hooked\Send.h" />
+    <ClInclude Include="PE Interact\DLLDumper.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Tools\KalTools.h" />
+    <ClInclude Include="Tools\Memory.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DLLDumper.cpp" />
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</CompileAsManaged>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -99,16 +100,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="GUI\MainWindow.cpp" />
+    <ClCompile Include="Hooked\Recv.cpp" />
+    <ClCompile Include="Hooked\Send.cpp" />
     <ClCompile Include="KalBot.cpp" />
-    <ClCompile Include="KalTools.cpp" />
-    <ClCompile Include="MainWindow.cpp" />
-    <ClCompile Include="Memory.cpp" />
-    <ClCompile Include="Send.cpp" />
-    <ClCompile Include="stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="Recv.cpp" />
+    <ClCompile Include="PE Interact\DLLDumper.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Tools\KalTools.cpp" />
+    <ClCompile Include="Tools\Memory.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

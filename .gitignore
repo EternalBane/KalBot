@@ -17,3 +17,9 @@ Debug/link.write.1.tlog
 Debug/stdafx.obj
 Debug/vc110.idb
 Debug/vc110.pdb
+Debug/DLLDumper.obj
+Debug/KalTools.obj
+Debug/MainWindow.obj
+Debug/Memory.obj
+Debug/Recv.obj
+Debug/Send.obj
