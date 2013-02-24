@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "KalTools.h"
+#include "Memory.h"
 
 // ------------------- REAL_FUNCTIONS ------------------- //
 typedef int (__cdecl* OpenDat_org)(char * , int , int , int , int);
@@ -8,8 +9,14 @@ typedef int (__cdecl * Chat_org)(char, char*, int);
 typedef int (__stdcall *myRecv)(SOCKET s, char *buf, int len, int flags);
 typedef int (__stdcall *mySend)(SOCKET s, char *buf, int len, int flags);
 
+// Extern data from other files //
 extern HWND textEdit;
+extern DWORD dwJMPbackRecv;
 extern bool logPacket;
+
+extern int fRecvIAT(SOCKET s, char *buf, int len, int flags);
+extern int fSendIAT(SOCKET s, char *buf, int len, int flags);
+// --------------------------- //
 
 myRecv oldRecv = NULL;
 mySend oldSend = NULL;
@@ -19,8 +26,6 @@ FARPROC KalTools::sendAddress = GetProcAddress(GetModuleHandle("ws2_32.dll"),"se
 
 DWORD KalTools::chatAdd = 0;
 DWORD KalTools::noticeAdd = 0;
-
-SOCKET KalTools::sock = 0;
 
 void KalTools::Log(string str)
 {
@@ -40,34 +45,27 @@ void KalTools::Log(const char* mFormat, ... )
 
 void KalTools::LogTextBoxPacket(char *str, LPCSTR type)
 {
-	string result;
+	stringstream result;
 	char *oldText;
+
 	int txtlen=GetWindowTextLength(textEdit);
-	if(txtlen > 5000)
+	if(txtlen > 2500)
 		txtlen = 0;
 	oldText = new char[txtlen+1];
 	if(txtlen == 0)
 		oldText[0] = '\0';
-	GetWindowText(textEdit,oldText, txtlen);
+
+	GetWindowText(textEdit,oldText,txtlen);
+
 	WORD size;
 	memcpy(&size,str,2);
-	stringstream sstream, sstream2;
-	sstream << hex << static_cast<WORD>(str[2]);
-	string packetType = sstream.str();
-	string packetSize;
-	sstream2 << size;
-	packetSize = sstream2.str();
-	result += oldText;
+	result << oldText;
 	if(txtlen != 0)
-		result += "\r\n";
-	result += type;
-	result += "Type[";
-	result += packetType;
-	result += "] Size[";
-	result += packetSize;
-	result += "]\r\n";
+		result << "\r\n";
+	result<< type << "Type[0x" << hex << static_cast<WORD>(str[2])
+		<< dec	<< "] Size[" << size << "]\r\n";
 
-	SendMessage(textEdit,WM_SETTEXT,0,(LPARAM)result.c_str());
+	SendMessage(textEdit,WM_SETTEXT,0,(LPARAM)result.str().c_str());
 	SendMessage(textEdit, LOWORD(WM_VSCROLL), SB_BOTTOM, 0);
 
 	delete[]oldText;
@@ -103,8 +101,7 @@ void KalTools::LogTextBox(const char *mFormat, ...)
 
 void KalTools::LogPacket(char *str, LPCSTR type)
 {
-	if(logPacket)
-		LogTextBoxPacket(str,type);
+	// Dummy
 }
 
 void KalTools::Chat(int color,char* mFormat,...)
@@ -149,10 +146,7 @@ void KalTools::HookIt()
 	LogTextBox("[Notice Address]: 0x%x\n",noticeAdd);
 }
 
-// ------------- Hooking --------------- //
-
-DWORD dwJMPbackRecv = (DWORD)KalTools::getRecvAddress() + 0xF; //The Jump Back address
-DWORD dwJMPbackSend;
+// ------------- Hooking recv --------------- //
 
 __declspec(naked) void fRecv()
 {
@@ -165,26 +159,24 @@ __declspec(naked) void fRecv()
 	__asm mov eax, DWORD PTR [ebp+0xC] // buf pointer
 	__asm MOV buf, eax
 
-	KalTools::LogPacket(buf,"Server->Client: ");
+	if(logPacket)
+	{
+		KalTools::LogTextBoxPacket(buf,"Server->Client: ");
+		KalTools::interpreter(buf);
+	}
 
 	__asm POPFD
 	__asm POPAD
 
 	__asm SUB ESP, 0x18
 	__asm PUSH EBX
+	__asm jmp $
 	__asm JMP dwJMPbackRecv
 } 
 
 void KalTools::hookRecv()
 {
 	CMemory::placeJMP((BYTE*)(DWORD)recvAddress+0xA, (DWORD)fRecv, 5);
-}
-
-int fRecvIAT(SOCKET s, char *buf, int len, int flags)
-{
-	KalTools::LogPacket(buf,"Server->Client: ");
-	KalTools::interpreter(buf);
-	return oldRecv(s,buf,len,flags);
 }
 
 void KalTools::hookIATRecv()
@@ -202,13 +194,6 @@ void KalTools::hookIATRecv()
 
 // ------ Send hooks ------- //
 
-int fSendIAT(SOCKET s, char *buf, int len, int flags)
-{
-	KalTools::sock = s;
-	KalTools::LogPacket(buf,"Client->Server: ");
-	return oldSend(s,buf,len,flags);
-}
-
 void KalTools::hookIATSend()
 {
 	PDWORD address;
@@ -223,62 +208,9 @@ void KalTools::hookIATSend()
 
 // ------ End of send hooks ----- //
 
-int countSize(LPCSTR str)
-{
-	int result = 0;
-	for(int i=0;i<strlen(str);i++)
-	{
-		if(str[i]=='b')
-			result += 1;
-		if(str[i]=='d')
-			result += 4;
-	}
-	return result;
-}
-
 void KalTools::send(DWORD type, LPCSTR format...)
 {
-	char SendText[] = "PACKET TYPE:0x%02x FORMAT:%s\n";
-	DWORD temp = 0;
-	char *packet;
 
-	LogTextBox(SendText,type,format);
-
-	va_list args;
-	va_start(args, format);
-	int i,s=0;
-	char* something;
-	packet = new char[countSize(format)];
-	for (i=0;i<strlen(format);i++)
-	{
-		switch (format[i])
-		{
-		case 'b': //BYTE
-			memcpy(packet+s,format+s,1);
-			s+=1;
-			temp=va_arg( args, BYTE);
-			//printf(" %d: %d\n",i+1,temp);
-			break;
-		case 'd': //DWORD
-			memcpy(packet+s,format+s,4);
-			s+=4;
-			temp=(DWORD)va_arg( args, DWORD);
-			//printf(" %d: %d\n",i+1,temp);
-			break;       
-		case 'w': //WORD
-			//printf(" %d: %d\n",i+1,(WORD)va_arg( args, DWORD));
-			break;
-		case 's': //STRING
-			something=va_arg( args, char*);
-			//printf(" %d: %s\n",i+1,something);
-			break;
-		case 'm':
-			//printf(" %d: %d\n",i+1,(DWORD)va_arg( args, DWORD));
-			break;
-		}
-	}
-	va_end(args);
-	fSendIAT(KalTools::sock,packet,countSize(format),0);
 }
 
 void KalTools::interpreter(char *packet)

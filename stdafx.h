@@ -22,9 +22,6 @@
 #include <sstream>
 #include <ctime>
 
-#include "Memory.h"
-#include "KalTools.h"
-
 #pragma comment(lib, "user32.lib")
 
 // TODO: W tym miejscu odwo³aj siê do dodatkowych nag³ówków wymaganych przez program

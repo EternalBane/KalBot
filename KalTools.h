@@ -10,7 +10,7 @@ using namespace std;
 #define recvIAT 0x00725468
 #define sendIAT 0x0072546C
 
-static enum Color
+enum Color
 {
 	orange = 16594,
 	lightblue = 15073034,
@@ -50,7 +50,6 @@ private:
 	static DWORD chatAdd;
 	static DWORD noticeAdd;
 public:
-	static SOCKET sock;
 
 	KalTools(){}
 	~KalTools(){}

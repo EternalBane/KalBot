@@ -3,9 +3,12 @@
 
 #include "stdafx.h"
 #include "MainWindow.h"
+#include "KalTools.h"
 
 extern HANDLE hThread;
-HWND textEdit;
+extern HWND prnt_hWnd;
+extern HMODULE inj_hModule;
+extern HWND textEdit;
 
 DWORD WINAPI windowThread(LPVOID lpParam)
 {

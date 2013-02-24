@@ -13,6 +13,27 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Pliki nagłówkowe\Hooked">
+      <UniqueIdentifier>{0d9117c1-c079-4cb8-8a5d-e36b4eb136a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pliki źródłowe\Hooked">
+      <UniqueIdentifier>{ebddbe6d-6fc5-4477-83fc-fa75a9ebd335}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pliki nagłówkowe\GUI">
+      <UniqueIdentifier>{3325fe86-2f39-481b-b801-ce1ea7417b22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pliki źródłowe\PE Intercept">
+      <UniqueIdentifier>{16e16f6e-7a9a-407e-9394-9cd456ccca65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pliki źródłowe\Tools">
+      <UniqueIdentifier>{c3712492-6147-454e-b187-e10807be4f80}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pliki nagłówkowe\Tools">
+      <UniqueIdentifier>{63782ccc-44b3-4127-a836-43935b9e8844}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pliki źródłowe\GUI">
+      <UniqueIdentifier>{20f7efe2-d359-4b40-addd-4e61457cd49c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -24,17 +45,20 @@
     <ClInclude Include="targetver.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="DLLDumper.h">
-      <Filter>Pliki nagłówkowe</Filter>
+    <ClInclude Include="Recv.h">
+      <Filter>Pliki nagłówkowe\Hooked</Filter>
     </ClInclude>
-    <ClInclude Include="KalTools.h">
-      <Filter>Pliki nagłówkowe</Filter>
-    </ClInclude>
-    <ClInclude Include="Memory.h">
-      <Filter>Pliki nagłówkowe</Filter>
+    <ClInclude Include="Send.h">
+      <Filter>Pliki nagłówkowe\Hooked</Filter>
     </ClInclude>
     <ClInclude Include="MainWindow.h">
-      <Filter>Pliki nagłówkowe</Filter>
+      <Filter>Pliki nagłówkowe\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory.h">
+      <Filter>Pliki nagłówkowe\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="KalTools.h">
+      <Filter>Pliki nagłówkowe\Tools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -47,14 +71,23 @@
     <ClCompile Include="dllmain.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="Recv.cpp">
+      <Filter>Pliki źródłowe\Hooked</Filter>
+    </ClCompile>
+    <ClCompile Include="Send.cpp">
+      <Filter>Pliki źródłowe\Hooked</Filter>
+    </ClCompile>
     <ClCompile Include="DLLDumper.cpp">
-      <Filter>Pliki źródłowe</Filter>
+      <Filter>Pliki źródłowe\PE Intercept</Filter>
     </ClCompile>
     <ClCompile Include="KalTools.cpp">
-      <Filter>Pliki źródłowe</Filter>
+      <Filter>Pliki źródłowe\Tools</Filter>
     </ClCompile>
     <ClCompile Include="Memory.cpp">
-      <Filter>Pliki źródłowe</Filter>
+      <Filter>Pliki źródłowe\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWindow.cpp">
+      <Filter>Pliki źródłowe\GUI</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
