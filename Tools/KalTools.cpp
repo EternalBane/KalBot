@@ -8,6 +8,7 @@ typedef void (__cdecl* Notice_org)(char*, int);
 typedef int (__cdecl * Chat_org)(char, char*, int);
 typedef int (__stdcall *myRecv)(SOCKET s, char *buf, int len, int flags);
 typedef int (__stdcall *mySend)(SOCKET s, char *buf, int len, int flags);
+typedef int (__cdecl *Send_org)(DWORD Header,LPCSTR szFormat,...);
 
 // Extern data from other files //
 extern HWND textEdit;
@@ -16,6 +17,8 @@ extern bool logPacket;
 
 extern int fRecvIAT(SOCKET s, char *buf, int len, int flags);
 extern int fSendIAT(SOCKET s, char *buf, int len, int flags);
+
+extern unsigned char* DecryptTableData;
 // --------------------------- //
 
 myRecv oldRecv = NULL;
@@ -26,6 +29,8 @@ FARPROC KalTools::sendAddress = GetProcAddress(GetModuleHandle("ws2_32.dll"),"se
 
 DWORD KalTools::chatAdd = 0;
 DWORD KalTools::noticeAdd = 0;
+DWORD KalTools::sendAdd = 0;
+BYTE* KalTools::sendKey = 0;
 
 void KalTools::Log(string str)
 {
@@ -41,6 +46,35 @@ void KalTools::Log(const char* mFormat, ... )
 	va_end(args);
 
 	printf(mFormat,mText);
+}
+
+void KalTools::LogTextBoxBytes(char *str, int len)
+{
+	stringstream result;
+	char *oldText;
+
+	int txtlen=GetWindowTextLength(textEdit);
+	if(txtlen > 2500)
+		txtlen = 0;
+	oldText = new char[txtlen+1];
+	if(txtlen == 0)
+		oldText[0] = '\0';
+
+	GetWindowText(textEdit,oldText,txtlen);
+
+	result << oldText;
+	if(txtlen != 0)
+		result << "\r\n";
+	for(int i=0;i<len;i++)
+	{
+		result << hex << static_cast<WORD>(str[i]) << " ";
+	}
+	result << "\r\n";
+
+	SendMessage(textEdit,WM_SETTEXT,0,(LPARAM)result.str().c_str());
+	SendMessage(textEdit, LOWORD(WM_VSCROLL), SB_BOTTOM, 0);
+
+	delete[]oldText;
 }
 
 void KalTools::LogTextBoxPacket(char *str, LPCSTR type)
@@ -69,6 +103,32 @@ void KalTools::LogTextBoxPacket(char *str, LPCSTR type)
 	SendMessage(textEdit, LOWORD(WM_VSCROLL), SB_BOTTOM, 0);
 
 	delete[]oldText;
+}
+
+void KalTools::LogTextBoxNl(const char* mFormat, ...)
+{
+		char* mText = new char[255];
+	va_list args;
+	va_start(args, mFormat);
+	vsprintf_s(mText,255,mFormat,args);
+	va_end(args);
+
+	string result;
+	char *oldText;
+	int txtlen=GetWindowTextLength(textEdit);
+	if(txtlen > 5000)
+		txtlen = 0;
+	oldText = new char[txtlen+1];
+	if(txtlen == 0)
+		oldText[0] = '\0';
+	GetWindowText(textEdit,oldText, txtlen);
+	result += oldText;
+	result += mText;
+
+	SendMessage(textEdit,WM_SETTEXT,0,(LPARAM)result.c_str());
+	SendMessage(textEdit, LOWORD(WM_VSCROLL), SB_BOTTOM, 0);
+
+	delete[]mText;
 }
 
 void KalTools::LogTextBox(const char *mFormat, ...)
@@ -128,6 +188,43 @@ void KalTools::Notice(int color,char* mFormat,...)
 	delete[]mText;
 }
 
+void KalTools::SendEngine(DWORD Header,LPCSTR szFormat,...)
+{
+	//LogTextBox("PACKET TYPE:0x%02x FORMAT:%s",Header,szFormat);
+	//DWORD temp;
+	va_list args;
+	va_start(args, szFormat);
+	((Send_org)sendAdd)(Header,szFormat,args);
+	//int i,s;
+	//char* something;
+	//for (i=0;i<strlen(szFormat);i++)
+	//{
+	//	switch (szFormat[i])
+	//	{
+	//	case 'b': //BYTE
+	//		temp=va_arg( args, BYTE);
+	//		LogTextBox(" %d: %d\n",i+1,temp);
+	//		break;
+	//	case 'd': //DWORD
+	//		temp =(DWORD)va_arg( args, DWORD);
+	//		LogTextBox(" %d: %d\n",i+1,temp);
+	//		break;       
+	//	case 'w': //WORD
+	//		LogTextBox(" %d: %d\n",i+1,(WORD)va_arg( args, DWORD));
+	//		break;
+	//	case 's': //STRING
+	//		something=va_arg( args, char*);
+	//		char* somethings;
+	//		LogTextBox(" %d: %s\n",i+1,something);// wird ja garnet ausgegebn
+	//		break;
+	//	case 'm':
+	//		LogTextBox(" %d: %d\n",i+1,(DWORD)va_arg( args, DWORD));
+	//		break;
+	//	}
+	//}
+	va_end(args);
+}
+
 void KalTools::HookIt()
 {
 	// Chat BYTE pattern , char * mask //
@@ -135,15 +232,18 @@ void KalTools::HookIt()
 	char * mChat = "xxx????????xxxx"; // mask //
 
 	chatAdd = CMemory::dwFindPattern( 0x00400000,0x00700000,pChat,mChat);
-	LogTextBox("[Chat Address]: 0x%x\n",chatAdd);
-
+	LogTextBox("[Chat Address]: 0x%x",chatAdd);
 
 	// Notice BYTE pattern , char * mask //
 	BYTE pNotice[] = {0x55,0x8B,0xEC,0x83,0x3D,0x5C,0x2B,0x86,0x00,0x00,0x74,0x34,0x8B,0x45,0x0C,0x50}; // pattern //
 	char * mNotice = "xxx???????xxxxxx"; // mask //
 
 	noticeAdd = CMemory::dwFindPattern( 0x00400000,0x00700000,pNotice,mNotice);  // obtain address //
-	LogTextBox("[Notice Address]: 0x%x\n",noticeAdd);
+	LogTextBox("[Notice Address]: 0x%x",noticeAdd);
+
+	DWORD dwEngineSendA = CMemory::dwFindPattern(0x401000,0x2bc000,(BYTE*)"\x55\x8B\xEC\x83\xEC\x18\x83\x3D\x00\x00\x00\x00\x00\x00\x00\x33\xC0","xxxxxxxx???????xx");
+	sendAdd = CMemory::dwFindPattern(dwEngineSendA+1,0x2bc000,(BYTE*)"\x55\x8B\xEC\x83\xEC\x18\x83\x3D\x00\x00\x00\x00\x00\x00\x00\x33\xC0","xxxxxxxx???????xx");
+	LogTextBox("[Send Address]: 0x%x",sendAdd);
 }
 
 // ------------- Hooking recv --------------- //
@@ -170,7 +270,6 @@ __declspec(naked) void fRecv()
 
 	__asm SUB ESP, 0x18
 	__asm PUSH EBX
-	__asm jmp $
 	__asm JMP dwJMPbackRecv
 } 
 
@@ -202,22 +301,19 @@ void KalTools::hookIATSend()
 	DWORD oldprot, oldprot2;
 
 	VirtualProtect(address, sizeof(DWORD), PAGE_READWRITE, (DWORD *)&oldprot);
+	LogTextBox("Before injecting: 0x%X ",*address);
 	*address = (DWORD)fSendIAT;
+	LogTextBox("After injecting: 0x%X ",*address);
 	VirtualProtect(address, sizeof(DWORD), oldprot, (DWORD *)&oldprot2);
 }
 
 // ------ End of send hooks ----- //
 
-void KalTools::send(DWORD type, LPCSTR format...)
-{
-
-}
-
 void KalTools::interpreter(char *packet)
 {
 	Player player;
 	Monster monster;
-	if (packet[2] == 0x32)
+	if(packet[2] == 0x32)
 	{
 		//player appear
 		memcpy((void*)&player.id,(void*)((DWORD)packet+3),4); // player id
@@ -248,7 +344,7 @@ void KalTools::interpreter(char *packet)
 			Chat(Color::pink," Class: %s X: %d Y: %d Z: %d",playerClass,player.x,player.y,player.z);
 		}
 	}
-	if (packet[2] == 0x33)
+	if(packet[2] == 0x33)
 	{
 		//mob apear
 		memcpy(&(monster.classe),(packet+3),2);
@@ -258,5 +354,32 @@ void KalTools::interpreter(char *packet)
 		memcpy(&(monster.z),(packet+17),2);
 		memcpy(&(monster.HP),(packet+19),2);
 		Chat(Color::violett," Mob: %d(%d) X: %d Y: %d Z: %d HP: %d",monster.classe,monster.id,monster.x,monster.y,monster.z,monster.HP);
+	}
+	if(packet[2] == 0x2a)
+	{
+		sendKey = (BYTE*)*((DWORD*)(sendAdd+0xA5));
+		LogTextBox("Send key captured: 0x%X ",*sendKey);
+		LogTextBox(" ");
+		//for(int i=0;i<540;i++)
+		//{
+		//	LogTextBoxNl(" 0x%X, ",*(sendKey+i));
+		//}
+		//LogTextBox(" ");
+		//for(int i=0;i<int(*(PWORD(packet)));i++)
+		//{
+		//	LogTextBoxNl(" %X ",(BYTE)packet[i]);
+		//	if(i%22==0)
+		//		LogTextBox(" ");
+		//}
+	}
+	else 
+	{
+		//LogTextBox("Bytes: ");
+		//for(int i=0;i<int(*(PWORD(packet)));i++)
+		//{
+		//	LogTextBoxNl(" %X ",(BYTE)packet[i]);
+		//	if(i%24==0)
+		//		LogTextBox(" ");
+		//}
 	}
 }

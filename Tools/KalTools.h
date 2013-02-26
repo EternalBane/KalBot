@@ -41,6 +41,8 @@ struct Player
 	WORD z;
 };
 
+static int (__cdecl* SendPacket)(DWORD,LPCSTR,...) = (int (__cdecl*)(DWORD,LPCSTR,...))0x005A0100;
+
 class KalTools
 {
 private:
@@ -49,6 +51,8 @@ private:
 
 	static DWORD chatAdd;
 	static DWORD noticeAdd;
+	static DWORD sendAdd;
+	static BYTE* sendKey;
 public:
 
 	KalTools(){}
@@ -56,9 +60,10 @@ public:
 
 	// Getters //
 	static FARPROC getRecvAddress(){return recvAddress;}
+	static DWORD getSendAddress(){return sendAdd;}
+	static BYTE* getSendKey(){return sendKey;}
 
 	static void hookRecv();
-	static void hookSend();
 
 	static void hookIATRecv();
 	static void hookIATSend();
@@ -69,10 +74,13 @@ public:
 	static void send(DWORD type, LPCSTR format...);
 	static void LogTextBoxPacket(char* text, LPCSTR type);
 	static void LogTextBox(const char* mFormat, ...);
+	static void LogTextBoxBytes(char *text, int len);
+	static void LogTextBoxNl(const char *mFormat, ...);
 
 	static void OpenDat(char * dat,int x,int y,int w, int h);
 	static void Chat(int color,char* mFormat,...);
 	static void Notice(int color,char* mFormat,...);
+	static void SendEngine(DWORD Header,LPCSTR szFormat,...);
 
 	static void HookIt();
 	static void interpreter(char *buf);

@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <sstream>
 #include <ctime>
+#include <conio.h>
 
 #pragma comment(lib, "user32.lib")
 
