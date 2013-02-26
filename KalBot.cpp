@@ -59,10 +59,12 @@ DWORD WINAPI mainThread(void * pParams)
 			break;
 		case 2:
 			system("cls");
-			SendPacket(0x02,"ss","lOp85RxH","p_KrychoPL");
-			Sleep(2000);
-			SendPacket(0x75,"s","00000000");
+			SendPacket(0x02,"ss","p_KrychoPL","lOp85RxH");
+			Sleep(3000);
+			SendPacket(0x75,"bs",0x0,"00000000");
 			cout << "Logging in...\n";
+			Sleep(3000);
+			SendPacket(0x0A,"dd",KalTools::getCharID(),0);
 		}
 		_getch();
 		system("cls");

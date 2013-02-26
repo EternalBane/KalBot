@@ -22,6 +22,7 @@
 #include <sstream>
 #include <ctime>
 #include <conio.h>
+#include <vector>
 
 #pragma comment(lib, "user32.lib")
 

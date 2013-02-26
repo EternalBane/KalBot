@@ -31,6 +31,9 @@ DWORD KalTools::chatAdd = 0;
 DWORD KalTools::noticeAdd = 0;
 DWORD KalTools::sendAdd = 0;
 BYTE* KalTools::sendKey = 0;
+BYTE* KalTools::tableKey = 0;
+DWORD KalTools::syncClient = 0;
+DWORD KalTools::charID = 0;
 
 void KalTools::Log(string str)
 {
@@ -107,7 +110,7 @@ void KalTools::LogTextBoxPacket(char *str, LPCSTR type)
 
 void KalTools::LogTextBoxNl(const char* mFormat, ...)
 {
-		char* mText = new char[255];
+	char* mText = new char[255];
 	va_list args;
 	va_start(args, mFormat);
 	vsprintf_s(mText,255,mFormat,args);
@@ -244,6 +247,8 @@ void KalTools::HookIt()
 	DWORD dwEngineSendA = CMemory::dwFindPattern(0x401000,0x2bc000,(BYTE*)"\x55\x8B\xEC\x83\xEC\x18\x83\x3D\x00\x00\x00\x00\x00\x00\x00\x33\xC0","xxxxxxxx???????xx");
 	sendAdd = CMemory::dwFindPattern(dwEngineSendA+1,0x2bc000,(BYTE*)"\x55\x8B\xEC\x83\xEC\x18\x83\x3D\x00\x00\x00\x00\x00\x00\x00\x33\xC0","xxxxxxxx???????xx");
 	LogTextBox("[Send Address]: 0x%x",sendAdd);
+
+	tableKey = (BYTE*)*((DWORD*)(sendAdd+0xCA)); 
 }
 
 // ------------- Hooking recv --------------- //
@@ -301,9 +306,7 @@ void KalTools::hookIATSend()
 	DWORD oldprot, oldprot2;
 
 	VirtualProtect(address, sizeof(DWORD), PAGE_READWRITE, (DWORD *)&oldprot);
-	LogTextBox("Before injecting: 0x%X ",*address);
 	*address = (DWORD)fSendIAT;
-	LogTextBox("After injecting: 0x%X ",*address);
 	VirtualProtect(address, sizeof(DWORD), oldprot, (DWORD *)&oldprot2);
 }
 
@@ -359,27 +362,21 @@ void KalTools::interpreter(char *packet)
 	{
 		sendKey = (BYTE*)*((DWORD*)(sendAdd+0xA5));
 		LogTextBox("Send key captured: 0x%X ",*sendKey);
-		LogTextBox(" ");
-		//for(int i=0;i<540;i++)
-		//{
-		//	LogTextBoxNl(" 0x%X, ",*(sendKey+i));
-		//}
-		//LogTextBox(" ");
-		//for(int i=0;i<int(*(PWORD(packet)));i++)
-		//{
-		//	LogTextBoxNl(" %X ",(BYTE)packet[i]);
-		//	if(i%22==0)
-		//		LogTextBox(" ");
-		//}
+
+		/*for(int i=0;i<540;i++)
+		{
+		LogTextBoxNl(" 0x%X, ",*(sendKey+i));  // dumping AES key table
+		}
+		LogTextBox(" ");*/
 	}
-	else 
+	if(packet[2] == 0x09)
 	{
-		//LogTextBox("Bytes: ");
-		//for(int i=0;i<int(*(PWORD(packet)));i++)
-		//{
-		//	LogTextBoxNl(" %X ",(BYTE)packet[i]);
-		//	if(i%24==0)
-		//		LogTextBox(" ");
-		//}
+		memcpy(&syncClient,packet+3,2);
+		LogTextBox("Sync client: 0x%X ",syncClient);
+	}
+	if(packet[2] == 0x11)
+	{
+		charID=*(DWORD*)&packet[9];
+		LogTextBox("Found char ID: %d ",charID);
 	}
 }

@@ -53,6 +53,9 @@ private:
 	static DWORD noticeAdd;
 	static DWORD sendAdd;
 	static BYTE* sendKey;
+	static BYTE* tableKey;
+	static DWORD syncClient;
+	static DWORD charID;
 public:
 
 	KalTools(){}
@@ -62,6 +65,9 @@ public:
 	static FARPROC getRecvAddress(){return recvAddress;}
 	static DWORD getSendAddress(){return sendAdd;}
 	static BYTE* getSendKey(){return sendKey;}
+	static BYTE* getTableKey(){return tableKey;}
+	static DWORD getSyncClient(){return syncClient;}
+	static DWORD getCharID(){return charID;}
 
 	static void hookRecv();
 
