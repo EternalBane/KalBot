@@ -8,7 +8,7 @@ int fRecvIAT(SOCKET s, char *buf, int len, int flags)
 	{
 		if(logPacket)
 		{
-			//KalTools::LogTextBoxPacket(buf,"Server->Client: ");
+			KalTools::LogTextBoxPacket(buf,"Server->Client: ");
 			KalTools::interpreter(buf);
 		}
 		ASyncPos = 0;

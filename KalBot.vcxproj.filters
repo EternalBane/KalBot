@@ -107,7 +107,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
-    <ClCompile Include="Crypt.cpp">
+    <ClCompile Include="Decryption\Crypt.cpp">
       <Filter>Pliki źródłowe\Decryption</Filter>
     </ClCompile>
   </ItemGroup>

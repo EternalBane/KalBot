@@ -2,8 +2,9 @@
 Made by BakaBug - http://www.BakaBug.net
 don't share it ! or it will get fixed xD
 */
-#include "CryptKalOnline.h"
-#include "CryptVari.h"
+#include "stdafx.h"
+#include "Crypt.h"
+#include "Vari.h"
 
 int __cdecl UpdateUNKNOW(char *var1) 
 {
@@ -20,10 +21,14 @@ int __cdecl UpdateUNKNOW(char *var1)
   return result;
 }
 
+/*
 int FifeTimesXOR(unsigned int s1[257],unsigned int v1,unsigned int s2[257],unsigned int v2,unsigned int s3[257],unsigned int v3,unsigned int s4[257],unsigned int v4,char* s5,unsigned int v5)
 {
      return s1[(unsigned __int8)v1] ^ s2[(unsigned __int16)((_WORD)v2 >> 8)] ^ s3[((unsigned int)v3 >> 16) & 0xFF] ^ s4[(unsigned int)v4 >> 24] ^ *((_DWORD *)s5 - v5);
 }
+*/
+
+#define FifeTimesXOR(s1,v1,s2,v2,s3,v3,s4,v4,s5,v5) s1[(unsigned __int8)v1] ^ s2[(unsigned __int16)((_WORD)v2 >> 8)] ^ s3[((unsigned int)v3 >> 16) & 0xFF] ^ s4[(unsigned int)v4 >> 24] ^ *((_DWORD *)s5 + v5)
 
 __int16 __cdecl EnCryptIt(char *dest, char *source, char *UNKNOW)
 {
@@ -43,7 +48,6 @@ __int16 __cdecl EnCryptIt(char *dest, char *source, char *UNKNOW)
   // return 0;
   if ( !(*(UNKNOW + 520) & 1) ) //&1 =  for encrypt , &2 = for decrypr
   {
-    printf("EnCryptIt: He calls UpdateUnknow .. wouldn't possible normalyn");
     UpdateUNKNOW(UNKNOW);
     *(UNKNOW + 520) = (unsigned __int8)*(UNKNOW + 520) ^ 3;
   }
@@ -59,64 +63,52 @@ __int16 __cdecl EnCryptIt(char *dest, char *source, char *UNKNOW)
     {
       if ( v9 != 14 )
         goto LABEL_12;
-      v10 = something13[(unsigned __int8)v8] ^ something14[(unsigned __int16)((_WORD)v7 >> 8)] ^ something15[((unsigned int)v6 >> 16) & 0xFF] ^ something16[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 - 16);
-      v11 = something13[(unsigned __int8)v5] ^ something14[(unsigned __int16)((_WORD)v8 >> 8)] ^ something15[((unsigned int)v7 >> 16) & 0xFF] ^ something16[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 - 15);
-      v12 = something13[(unsigned __int8)v6] ^ something14[(unsigned __int16)((_WORD)v5 >> 8)] ^ something15[((unsigned int)v8 >> 16) & 0xFF] ^ something16[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 - 14);
-      v13 = something13[(unsigned __int8)v7] ^ something14[(unsigned __int16)((_WORD)v6 >> 8)] ^ something15[((unsigned int)v5 >> 16) & 0xFF] ^ something16[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 - 13);
-      v5 = something13[(unsigned __int8)v13] ^ something14[(unsigned __int16)((_WORD)v12 >> 8)] ^ something15[((unsigned int)v11 >> 16) & 0xFF] ^ something16[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 - 12);
-      v6 = something13[(unsigned __int8)v10] ^ something14[(unsigned __int16)((_WORD)v13 >> 8)] ^ something15[((unsigned int)v12 >> 16) & 0xFF] ^ something16[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 - 11);
-      v7 = something13[(unsigned __int8)v11] ^ something14[(unsigned __int16)((_WORD)v10 >> 8)] ^ something15[((unsigned int)v13 >> 16) & 0xFF] ^ something16[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 - 10);
-      v8 = something13[(unsigned __int8)v12] ^ something14[(unsigned __int16)((_WORD)v11 >> 8)] ^ something15[((unsigned int)v10 >> 16) & 0xFF] ^ something16[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 - 9);
+	  v10 = FifeTimesXOR(something13, v8, something14, v7, something15, v6, something16, v5, v4 ,-16);
+      v11 = FifeTimesXOR(something13, v5, something14, v8, something15, v7, something16, v6, v4 ,-15);
+      v12 = FifeTimesXOR(something13, v6, something14, v5, something15, v8, something16, v7, v4 ,-14);
+      v13 = FifeTimesXOR(something13, v7, something14, v6, something15, v5, something16, v8, v4 ,-13);
+      
+	  v5  = FifeTimesXOR(something13, v13, something14, v12, something15, v11, something16, v10, v4,-12);
+      v6  = FifeTimesXOR(something13, v10, something14, v13, something15, v12, something16, v11, v4,-11);
+      v7  = FifeTimesXOR(something13, v11, something14, v10, something15, v13, something16, v12, v4,-10);
+      v8  = FifeTimesXOR(something13, v12, something14, v11, something15, v10, something16, v13, v4,-9);
     }
-    v10 = something13[(unsigned __int8)v8] ^ something14[(unsigned __int16)((_WORD)v7 >> 8)] ^ something15[((unsigned int)v6 >> 16) & 0xFF] ^ something16[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 - 8);
-    v11 = something13[(unsigned __int8)v5] ^ something14[(unsigned __int16)((_WORD)v8 >> 8)] ^ something15[((unsigned int)v7 >> 16) & 0xFF] ^ something16[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 - 7);
-    v12 = something13[(unsigned __int8)v6] ^ something14[(unsigned __int16)((_WORD)v5 >> 8)] ^ something15[((unsigned int)v8 >> 16) & 0xFF] ^ something16[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 - 6);
-    v13 = something13[(unsigned __int8)v7] ^ something14[(unsigned __int16)((_WORD)v6 >> 8)] ^ something15[((unsigned int)v5 >> 16) & 0xFF] ^ something16[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 - 5);
-    v5 = something13[(unsigned __int8)v13] ^ something14[(unsigned __int16)((_WORD)v12 >> 8)] ^ something15[((unsigned int)v11 >> 16) & 0xFF] ^ something16[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 - 4);
-    v6 = something13[(unsigned __int8)v10] ^ something14[(unsigned __int16)((_WORD)v13 >> 8)] ^ something15[((unsigned int)v12 >> 16) & 0xFF] ^ something16[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 - 3);
-    v7 = something13[(unsigned __int8)v11] ^ something14[(unsigned __int16)((_WORD)v10 >> 8)] ^ something15[((unsigned int)v13 >> 16) & 0xFF] ^ something16[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 - 2);
-    v8 = something13[(unsigned __int8)v12] ^ something14[(unsigned __int16)((_WORD)v11 >> 8)] ^ something15[((unsigned int)v10 >> 16) & 0xFF] ^ something16[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 - 1);
+	v10 = FifeTimesXOR(something13, v8, something14, v7, something15, v6, something16, v5, v4 ,-8);
+	v11 = FifeTimesXOR(something13, v5, something14, v8, something15, v7, something16, v6, v4 ,-7);
+    v12 = FifeTimesXOR(something13, v6, something14, v5, something15, v8, something16, v7, v4 ,-6);
+    v13 = FifeTimesXOR(something13, v7, something14, v6, something15, v5, something16, v8, v4 ,-5);
+
+	v5  = FifeTimesXOR(something13, v13, something14, v12, something15, v11, something16, v10, v4,-4);
+    v6  = FifeTimesXOR(something13, v10, something14, v13, something15, v12, something16, v11, v4,-3);
+    v7  = FifeTimesXOR(something13, v11, something14, v10, something15, v13, something16, v12, v4,-2);
+    v8  = FifeTimesXOR(something13, v12, something14, v11, something15, v10, something16, v13, v4,-1);
   }
-  v10 = something13[(unsigned __int8)v8] ^ something14[(unsigned __int16)((_WORD)v7 >> 8)] ^ something15[((unsigned int)v6 >> 16) & 0xFF] ^ something16[(unsigned int)v5 >> 24] ^ *(_DWORD *)v4;
-  v11 = something13[(unsigned __int8)v5] ^ something14[(unsigned __int16)((_WORD)v8 >> 8)] ^ something15[((unsigned int)v7 >> 16) & 0xFF] ^ something16[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 + 1);
-  v12 = something13[(unsigned __int8)v6] ^ something14[(unsigned __int16)((_WORD)v5 >> 8)] ^ something15[((unsigned int)v8 >> 16) & 0xFF] ^ something16[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 + 2);
-  v13 = something13[(unsigned __int8)v7] ^ something14[(unsigned __int16)((_WORD)v6 >> 8)] ^ something15[((unsigned int)v5 >> 16) & 0xFF] ^ something16[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 + 3);
-  v5 = something13[(unsigned __int8)v13] ^ something14[(unsigned __int16)((_WORD)v12 >> 8)] ^ something15[((unsigned int)v11 >> 16) & 0xFF] ^ something16[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 + 4);
-  v6 = something13[(unsigned __int8)v10] ^ something14[(unsigned __int16)((_WORD)v13 >> 8)] ^ something15[((unsigned int)v12 >> 16) & 0xFF] ^ something16[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 + 5);
-  v7 = something13[(unsigned __int8)v11] ^ something14[(unsigned __int16)((_WORD)v10 >> 8)] ^ something15[((unsigned int)v13 >> 16) & 0xFF] ^ something16[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 + 6);
-  v8 = something13[(unsigned __int8)v12] ^ something14[(unsigned __int16)((_WORD)v11 >> 8)] ^ something15[((unsigned int)v10 >> 16) & 0xFF] ^ something16[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 + 7);
-  v10 = something13[(unsigned __int8)v8] ^ something14[(unsigned __int16)((_WORD)v7 >> 8)] ^ something15[((unsigned int)v6 >> 16) & 0xFF] ^ something16[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 + 8);
-  v11 = something13[(unsigned __int8)v5] ^ something14[(unsigned __int16)((_WORD)v8 >> 8)] ^ something15[((unsigned int)v7 >> 16) & 0xFF] ^ something16[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 + 9);
-  v12 = something13[(unsigned __int8)v6] ^ something14[(unsigned __int16)((_WORD)v5 >> 8)] ^ something15[((unsigned int)v8 >> 16) & 0xFF] ^ something16[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 + 10);
-  v13 = something13[(unsigned __int8)v7] ^ something14[(unsigned __int16)((_WORD)v6 >> 8)] ^ something15[((unsigned int)v5 >> 16) & 0xFF] ^ something16[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 + 11);
-  v5 = something13[(unsigned __int8)v13] ^ something14[(unsigned __int16)((_WORD)v12 >> 8)] ^ something15[((unsigned int)v11 >> 16) & 0xFF] ^ something16[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 + 12);
-  v6 = something13[(unsigned __int8)v10] ^ something14[(unsigned __int16)((_WORD)v13 >> 8)] ^ something15[((unsigned int)v12 >> 16) & 0xFF] ^ something16[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 + 13);
-  v7 = something13[(unsigned __int8)v11] ^ something14[(unsigned __int16)((_WORD)v10 >> 8)] ^ something15[((unsigned int)v13 >> 16) & 0xFF] ^ something16[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 + 14);
-  v8 = something13[(unsigned __int8)v12] ^ something14[(unsigned __int16)((_WORD)v11 >> 8)] ^ something15[((unsigned int)v10 >> 16) & 0xFF] ^ something16[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 + 15);
-  v10 = something13[(unsigned __int8)v8] ^ something14[(unsigned __int16)((_WORD)v7 >> 8)] ^ something15[((unsigned int)v6 >> 16) & 0xFF] ^ something16[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 + 16);
-  v11 = something13[(unsigned __int8)v5] ^ something14[(unsigned __int16)((_WORD)v8 >> 8)] ^ something15[((unsigned int)v7 >> 16) & 0xFF] ^ something16[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 + 17);
-  v12 = something13[(unsigned __int8)v6] ^ something14[(unsigned __int16)((_WORD)v5 >> 8)] ^ something15[((unsigned int)v8 >> 16) & 0xFF] ^ something16[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 + 18);
-  v13 = something13[(unsigned __int8)v7] ^ something14[(unsigned __int16)((_WORD)v6 >> 8)] ^ something15[((unsigned int)v5 >> 16) & 0xFF] ^ something16[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 + 19);
-  v5 = something13[(unsigned __int8)v13] ^ something14[(unsigned __int16)((_WORD)v12 >> 8)] ^ something15[((unsigned int)v11 >> 16) & 0xFF] ^ something16[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 + 20);
-  v6 = something13[(unsigned __int8)v10] ^ something14[(unsigned __int16)((_WORD)v13 >> 8)] ^ something15[((unsigned int)v12 >> 16) & 0xFF] ^ something16[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 + 21);
-  v7 = something13[(unsigned __int8)v11] ^ something14[(unsigned __int16)((_WORD)v10 >> 8)] ^ something15[((unsigned int)v13 >> 16) & 0xFF] ^ something16[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 + 22);
-  v8 = something13[(unsigned __int8)v12] ^ something14[(unsigned __int16)((_WORD)v11 >> 8)] ^ something15[((unsigned int)v10 >> 16) & 0xFF] ^ something16[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 + 23);
-  v10 = something13[(unsigned __int8)v8] ^ something14[(unsigned __int16)((_WORD)v7 >> 8)] ^ something15[((unsigned int)v6 >> 16) & 0xFF] ^ something16[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 + 24);
-  v11 = something13[(unsigned __int8)v5] ^ something14[(unsigned __int16)((_WORD)v8 >> 8)] ^ something15[((unsigned int)v7 >> 16) & 0xFF] ^ something16[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 + 25);
-  v12 = something13[(unsigned __int8)v6] ^ something14[(unsigned __int16)((_WORD)v5 >> 8)] ^ something15[((unsigned int)v8 >> 16) & 0xFF] ^ something16[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 + 26);
-  v13 = something13[(unsigned __int8)v7] ^ something14[(unsigned __int16)((_WORD)v6 >> 8)] ^ something15[((unsigned int)v5 >> 16) & 0xFF] ^ something16[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 + 27);
-  v5 = something13[(unsigned __int8)v13] ^ something14[(unsigned __int16)((_WORD)v12 >> 8)] ^ something15[((unsigned int)v11 >> 16) & 0xFF] ^ something16[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 + 28);
-  v6 = something13[(unsigned __int8)v10] ^ something14[(unsigned __int16)((_WORD)v13 >> 8)] ^ something15[((unsigned int)v12 >> 16) & 0xFF] ^ something16[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 + 29);
-  v7 = something13[(unsigned __int8)v11] ^ something14[(unsigned __int16)((_WORD)v10 >> 8)] ^ something15[((unsigned int)v13 >> 16) & 0xFF] ^ something16[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 + 30);
-  v8 = something13[(unsigned __int8)v12] ^ something14[(unsigned __int16)((_WORD)v11 >> 8)] ^ something15[((unsigned int)v10 >> 16) & 0xFF] ^ something16[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 + 31);
-  v10 = something13[(unsigned __int8)v8] ^ something14[(unsigned __int16)((_WORD)v7 >> 8)] ^ something15[((unsigned int)v6 >> 16) & 0xFF] ^ something16[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 + 32);
-  v11 = something13[(unsigned __int8)v5] ^ something14[(unsigned __int16)((_WORD)v8 >> 8)] ^ something15[((unsigned int)v7 >> 16) & 0xFF] ^ something16[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 + 33);
-  v12 = something13[(unsigned __int8)v6] ^ something14[(unsigned __int16)((_WORD)v5 >> 8)] ^ something15[((unsigned int)v8 >> 16) & 0xFF] ^ something16[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 + 34);
-  v13 = something13[(unsigned __int8)v7] ^ something14[(unsigned __int16)((_WORD)v6 >> 8)] ^ something15[((unsigned int)v5 >> 16) & 0xFF] ^ something16[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 + 35);
-  v5 = something17[(unsigned __int8)v13] ^ something18[(unsigned __int16)((_WORD)v12 >> 8)] ^ something19[((unsigned int)v11 >> 16) & 0xFF] ^ something20[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 + 36);
-  v6 = something17[(unsigned __int8)v10] ^ something18[(unsigned __int16)((_WORD)v13 >> 8)] ^ something19[((unsigned int)v12 >> 16) & 0xFF] ^ something20[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 + 37);
-  v7 = something17[(unsigned __int8)v11] ^ something18[(unsigned __int16)((_WORD)v10 >> 8)] ^ something19[((unsigned int)v13 >> 16) & 0xFF] ^ something20[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 + 38);
-  v8 = something17[(unsigned __int8)v12] ^ something18[(unsigned __int16)((_WORD)v11 >> 8)] ^ something19[((unsigned int)v10 >> 16) & 0xFF] ^ something20[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 + 39);
+  int i;
+  for (i=0;i<4;i++)
+  {
+    /* PART 1: */
+	v10 = FifeTimesXOR(something13, v8, something14, v7, something15, v6, something16, v5, v4 ,i*8+0); 
+	v11 = FifeTimesXOR(something13, v5, something14, v8, something15, v7, something16, v6, v4 ,i*8+1);
+	v12 = FifeTimesXOR(something13, v6, something14, v5, something15, v8, something16, v7, v4 ,i*8+2);
+	v13 = FifeTimesXOR(something13, v7, something14, v6, something15, v5, something16, v8, v4 ,i*8+3);
+
+	/* PART 2: */
+	v5  = FifeTimesXOR(something13, v13, something14, v12, something15, v11, something16, v10, v4,i*8+4);
+	v6  = FifeTimesXOR(something13, v10, something14, v13, something15, v12, something16, v11, v4,i*8+5);
+	v7  = FifeTimesXOR(something13, v11, something14, v10, something15, v13, something16, v12, v4,i*8+6);
+	v8  = FifeTimesXOR(something13, v12, something14, v11, something15, v10, something16, v13, v4,i*8+7);
+  }
+  /* PART x: */
+  v10 = FifeTimesXOR(something13, v8, something14, v7, something15, v6, something16, v5, v4 ,32);
+  v11 = FifeTimesXOR(something13, v5, something14, v8, something15, v7, something16, v6, v4 ,33);
+  v12 = FifeTimesXOR(something13, v6, something14, v5, something15, v8, something16, v7, v4 ,34);
+  v13 = FifeTimesXOR(something13, v7, something14, v6, something15, v5, something16, v8, v4 ,35);
+
+  /* PART last: */
+  v5  = FifeTimesXOR(something17, v13, something18, v12, something19, v11, something20, v10, v4,36);
+  v6  = FifeTimesXOR(something17, v10, something18, v13, something19, v12, something20, v11, v4,37);
+  v7  = FifeTimesXOR(something17, v11, something18, v10, something19, v13, something20, v12, v4,38);
+  v8  = FifeTimesXOR(something17, v12, something18, v11, something19, v10, something20, v13, v4,39);
 LABEL_12:
   *(_DWORD *)source = v5;
   *((_DWORD *)source + 1) = v6;
@@ -143,7 +135,6 @@ __int16 __cdecl DeCryptIt(char *dest, char *source, char *UNKNOW)
  //   return 0;
  if ( !(*(UNKNOW + 520) & 2) )
   {
-    printf("DeCryptIt: He calls UpdateUnknow .. wouldn't possible normalyn");
     UpdateUNKNOW(UNKNOW);
     *(UNKNOW + 520) = (unsigned __int8)*(UNKNOW + 520) ^ 3;
   }
@@ -159,64 +150,52 @@ __int16 __cdecl DeCryptIt(char *dest, char *source, char *UNKNOW)
     {
       if ( v9 != 14 )
         goto LABEL_12;
-      v10 = something4[(unsigned __int8)v6] ^ something3[(unsigned __int16)((_WORD)v7 >> 8)] ^ something2[((unsigned int)v8 >> 16) & 0xFF] ^ something1[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 + 16);
-      v11 = something4[(unsigned __int8)v7] ^ something3[(unsigned __int16)((_WORD)v8 >> 8)] ^ something2[((unsigned int)v5 >> 16) & 0xFF] ^ something1[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 + 17);
-      v12 = something4[(unsigned __int8)v8] ^ something3[(unsigned __int16)((_WORD)v5 >> 8)] ^ something2[((unsigned int)v6 >> 16) & 0xFF] ^ something1[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 + 18);
-      v13 = something4[(unsigned __int8)v5] ^ something3[(unsigned __int16)((_WORD)v6 >> 8)] ^ something2[((unsigned int)v7 >> 16) & 0xFF] ^ something1[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 + 19);
-      v5 = something4[(unsigned __int8)v11] ^ something3[(unsigned __int16)((_WORD)v12 >> 8)] ^ something2[((unsigned int)v13 >> 16) & 0xFF] ^ something1[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 + 12);
-      v6 = something4[(unsigned __int8)v12] ^ something3[(unsigned __int16)((_WORD)v13 >> 8)] ^ something2[((unsigned int)v10 >> 16) & 0xFF] ^ something1[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 + 13);
-      v7 = something4[(unsigned __int8)v13] ^ something3[(unsigned __int16)((_WORD)v10 >> 8)] ^ something2[((unsigned int)v11 >> 16) & 0xFF] ^ something1[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 + 14);
-      v8 = something4[(unsigned __int8)v10] ^ something3[(unsigned __int16)((_WORD)v11 >> 8)] ^ something2[((unsigned int)v12 >> 16) & 0xFF] ^ something1[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 + 15);
+	  v10 = FifeTimesXOR(something4, v6, something3, v7, something2, v8, something1, v5, v4 ,16);
+	  v11 = FifeTimesXOR(something4, v7, something3, v8, something2, v5, something1, v6, v4 ,17);
+	  v12 = FifeTimesXOR(something4, v8, something3, v5, something2, v6, something1, v7, v4 ,18);
+	  v13 = FifeTimesXOR(something4, v5, something3, v6, something2, v7, something1, v8, v4 ,19);
+
+      v5 = FifeTimesXOR(something4, v11, something3, v12, something2, v13, something1, v10, v4 ,12);
+	  v6 = FifeTimesXOR(something4, v12, something3, v13, something2, v10, something1, v11, v4 ,13);
+	  v7 = FifeTimesXOR(something4, v13, something3, v10, something2, v11, something1, v12, v4 ,14);
+	  v8 = FifeTimesXOR(something4, v10, something3, v11, something2, v12, something1, v13, v4 ,15);
     }
-    v10 = something4[(unsigned __int8)v6] ^ something3[(unsigned __int16)((_WORD)v7 >> 8)] ^ something2[((unsigned int)v8 >> 16) & 0xFF] ^ something1[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 + 8);
-    v11 = something4[(unsigned __int8)v7] ^ something3[(unsigned __int16)((_WORD)v8 >> 8)] ^ something2[((unsigned int)v5 >> 16) & 0xFF] ^ something1[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 + 9);
-    v12 = something4[(unsigned __int8)v8] ^ something3[(unsigned __int16)((_WORD)v5 >> 8)] ^ something2[((unsigned int)v6 >> 16) & 0xFF] ^ something1[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 + 10);
-    v13 = something4[(unsigned __int8)v5] ^ something3[(unsigned __int16)((_WORD)v6 >> 8)] ^ something2[((unsigned int)v7 >> 16) & 0xFF] ^ something1[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 + 11);
-    v5 = something4[(unsigned __int8)v11] ^ something3[(unsigned __int16)((_WORD)v12 >> 8)] ^ something2[((unsigned int)v13 >> 16) & 0xFF] ^ something1[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 + 4);
-    v6 = something4[(unsigned __int8)v12] ^ something3[(unsigned __int16)((_WORD)v13 >> 8)] ^ something2[((unsigned int)v10 >> 16) & 0xFF] ^ something1[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 + 5);
-    v7 = something4[(unsigned __int8)v13] ^ something3[(unsigned __int16)((_WORD)v10 >> 8)] ^ something2[((unsigned int)v11 >> 16) & 0xFF] ^ something1[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 + 6);
-    v8 = something4[(unsigned __int8)v10] ^ something3[(unsigned __int16)((_WORD)v11 >> 8)] ^ something2[((unsigned int)v12 >> 16) & 0xFF] ^ something1[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 + 7);
+	v10 = FifeTimesXOR(something4, v6, something3, v7, something2, v8, something1, v5, v4 ,8);
+	v11 = FifeTimesXOR(something4, v7, something3, v8, something2, v5, something1, v6, v4 ,9);
+	v12 = FifeTimesXOR(something4, v8, something3, v5, something2, v6, something1, v7, v4 ,10);
+	v13 = FifeTimesXOR(something4, v5, something3, v6, something2, v7, something1, v8, v4 ,11);
+
+	v5 = FifeTimesXOR(something4, v11, something3, v12, something2, v13, something1, v10, v4 ,4);
+	v6 = FifeTimesXOR(something4, v12, something3, v13, something2, v10, something1, v11, v4 ,5);
+	v7 = FifeTimesXOR(something4, v13, something3, v10, something2, v11, something1, v12, v4 ,6);
+	v8 = FifeTimesXOR(something4, v10, something3, v11, something2, v12, something1, v13, v4 ,7);
   }
-  v10 = something4[(unsigned __int8)v6] ^ something3[(unsigned __int16)((_WORD)v7 >> 8)] ^ something2[((unsigned int)v8 >> 16) & 0xFF] ^ something1[(unsigned int)v5 >> 24] ^ *(_DWORD *)v4;
-  v11 = something4[(unsigned __int8)v7] ^ something3[(unsigned __int16)((_WORD)v8 >> 8)] ^ something2[((unsigned int)v5 >> 16) & 0xFF] ^ something1[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 + 1);
-  v12 = something4[(unsigned __int8)v8] ^ something3[(unsigned __int16)((_WORD)v5 >> 8)] ^ something2[((unsigned int)v6 >> 16) & 0xFF] ^ something1[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 + 2);
-  v13 = something4[(unsigned __int8)v5] ^ something3[(unsigned __int16)((_WORD)v6 >> 8)] ^ something2[((unsigned int)v7 >> 16) & 0xFF] ^ something1[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 + 3);
-  v5 = something4[(unsigned __int8)v11] ^ something3[(unsigned __int16)((_WORD)v12 >> 8)] ^ something2[((unsigned int)v13 >> 16) & 0xFF] ^ something1[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 - 4);
-  v6 = something4[(unsigned __int8)v12] ^ something3[(unsigned __int16)((_WORD)v13 >> 8)] ^ something2[((unsigned int)v10 >> 16) & 0xFF] ^ something1[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 - 3);
-  v7 = something4[(unsigned __int8)v13] ^ something3[(unsigned __int16)((_WORD)v10 >> 8)] ^ something2[((unsigned int)v11 >> 16) & 0xFF] ^ something1[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 - 2);
-  v8 = something4[(unsigned __int8)v10] ^ something3[(unsigned __int16)((_WORD)v11 >> 8)] ^ something2[((unsigned int)v12 >> 16) & 0xFF] ^ something1[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 - 1);
-  v10 = something4[(unsigned __int8)v6] ^ something3[(unsigned __int16)((_WORD)v7 >> 8)] ^ something2[((unsigned int)v8 >> 16) & 0xFF] ^ something1[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 - 8);
-  v11 = something4[(unsigned __int8)v7] ^ something3[(unsigned __int16)((_WORD)v8 >> 8)] ^ something2[((unsigned int)v5 >> 16) & 0xFF] ^ something1[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 - 7);
-  v12 = something4[(unsigned __int8)v8] ^ something3[(unsigned __int16)((_WORD)v5 >> 8)] ^ something2[((unsigned int)v6 >> 16) & 0xFF] ^ something1[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 - 6);
-  v13 = something4[(unsigned __int8)v5] ^ something3[(unsigned __int16)((_WORD)v6 >> 8)] ^ something2[((unsigned int)v7 >> 16) & 0xFF] ^ something1[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 - 5);
-  v5 = something4[(unsigned __int8)v11] ^ something3[(unsigned __int16)((_WORD)v12 >> 8)] ^ something2[((unsigned int)v13 >> 16) & 0xFF] ^ something1[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 - 12);
-  v6 = something4[(unsigned __int8)v12] ^ something3[(unsigned __int16)((_WORD)v13 >> 8)] ^ something2[((unsigned int)v10 >> 16) & 0xFF] ^ something1[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 - 11);
-  v7 = something4[(unsigned __int8)v13] ^ something3[(unsigned __int16)((_WORD)v10 >> 8)] ^ something2[((unsigned int)v11 >> 16) & 0xFF] ^ something1[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 - 10);
-  v8 = something4[(unsigned __int8)v10] ^ something3[(unsigned __int16)((_WORD)v11 >> 8)] ^ something2[((unsigned int)v12 >> 16) & 0xFF] ^ something1[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 - 9);
-  v10 = something4[(unsigned __int8)v6] ^ something3[(unsigned __int16)((_WORD)v7 >> 8)] ^ something2[((unsigned int)v8 >> 16) & 0xFF] ^ something1[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 - 16);
-  v11 = something4[(unsigned __int8)v7] ^ something3[(unsigned __int16)((_WORD)v8 >> 8)] ^ something2[((unsigned int)v5 >> 16) & 0xFF] ^ something1[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 - 15);
-  v12 = something4[(unsigned __int8)v8] ^ something3[(unsigned __int16)((_WORD)v5 >> 8)] ^ something2[((unsigned int)v6 >> 16) & 0xFF] ^ something1[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 - 14);
-  v13 = something4[(unsigned __int8)v5] ^ something3[(unsigned __int16)((_WORD)v6 >> 8)] ^ something2[((unsigned int)v7 >> 16) & 0xFF] ^ something1[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 - 13);
-  v5 = something4[(unsigned __int8)v11] ^ something3[(unsigned __int16)((_WORD)v12 >> 8)] ^ something2[((unsigned int)v13 >> 16) & 0xFF] ^ something1[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 - 20);
-  v6 = something4[(unsigned __int8)v12] ^ something3[(unsigned __int16)((_WORD)v13 >> 8)] ^ something2[((unsigned int)v10 >> 16) & 0xFF] ^ something1[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 - 19);
-  v7 = something4[(unsigned __int8)v13] ^ something3[(unsigned __int16)((_WORD)v10 >> 8)] ^ something2[((unsigned int)v11 >> 16) & 0xFF] ^ something1[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 - 18);
-  v8 = something4[(unsigned __int8)v10] ^ something3[(unsigned __int16)((_WORD)v11 >> 8)] ^ something2[((unsigned int)v12 >> 16) & 0xFF] ^ something1[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 - 17);
-  v10 = something4[(unsigned __int8)v6] ^ something3[(unsigned __int16)((_WORD)v7 >> 8)] ^ something2[((unsigned int)v8 >> 16) & 0xFF] ^ something1[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 - 24);
-  v11 = something4[(unsigned __int8)v7] ^ something3[(unsigned __int16)((_WORD)v8 >> 8)] ^ something2[((unsigned int)v5 >> 16) & 0xFF] ^ something1[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 - 23);
-  v12 = something4[(unsigned __int8)v8] ^ something3[(unsigned __int16)((_WORD)v5 >> 8)] ^ something2[((unsigned int)v6 >> 16) & 0xFF] ^ something1[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 - 22);
-  v13 = something4[(unsigned __int8)v5] ^ something3[(unsigned __int16)((_WORD)v6 >> 8)] ^ something2[((unsigned int)v7 >> 16) & 0xFF] ^ something1[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 - 21);
-  v5 = something4[(unsigned __int8)v11] ^ something3[(unsigned __int16)((_WORD)v12 >> 8)] ^ something2[((unsigned int)v13 >> 16) & 0xFF] ^ something1[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 - 28);
-  v6 = something4[(unsigned __int8)v12] ^ something3[(unsigned __int16)((_WORD)v13 >> 8)] ^ something2[((unsigned int)v10 >> 16) & 0xFF] ^ something1[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 - 27);
-  v7 = something4[(unsigned __int8)v13] ^ something3[(unsigned __int16)((_WORD)v10 >> 8)] ^ something2[((unsigned int)v11 >> 16) & 0xFF] ^ something1[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 - 26);
-  v8 = something4[(unsigned __int8)v10] ^ something3[(unsigned __int16)((_WORD)v11 >> 8)] ^ something2[((unsigned int)v12 >> 16) & 0xFF] ^ something1[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 - 25);
-  v10 = something4[(unsigned __int8)v6] ^ something3[(unsigned __int16)((_WORD)v7 >> 8)] ^ something2[((unsigned int)v8 >> 16) & 0xFF] ^ something1[(unsigned int)v5 >> 24] ^ *((_DWORD *)v4 - 32);
-  v11 = something4[(unsigned __int8)v7] ^ something3[(unsigned __int16)((_WORD)v8 >> 8)] ^ something2[((unsigned int)v5 >> 16) & 0xFF] ^ something1[(unsigned int)v6 >> 24] ^ *((_DWORD *)v4 - 31);
-  v12 = something4[(unsigned __int8)v8] ^ something3[(unsigned __int16)((_WORD)v5 >> 8)] ^ something2[((unsigned int)v6 >> 16) & 0xFF] ^ something1[(unsigned int)v7 >> 24] ^ *((_DWORD *)v4 - 30);
-  v13 = something4[(unsigned __int8)v5] ^ something3[(unsigned __int16)((_WORD)v6 >> 8)] ^ something2[((unsigned int)v7 >> 16) & 0xFF] ^ something1[(unsigned int)v8 >> 24] ^ *((_DWORD *)v4 - 29);
-  v5 = something8[(unsigned __int8)v11] ^ something7[(unsigned __int16)((_WORD)v12 >> 8)] ^ something6[((unsigned int)v13 >> 16) & 0xFF] ^ something5[(unsigned int)v10 >> 24] ^ *((_DWORD *)v4 - 36);
-  v6 = something8[(unsigned __int8)v12] ^ something7[(unsigned __int16)((_WORD)v13 >> 8)] ^ something6[((unsigned int)v10 >> 16) & 0xFF] ^ something5[(unsigned int)v11 >> 24] ^ *((_DWORD *)v4 - 35);
-  v7 = something8[(unsigned __int8)v13] ^ something7[(unsigned __int16)((_WORD)v10 >> 8)] ^ something6[((unsigned int)v11 >> 16) & 0xFF] ^ something5[(unsigned int)v12 >> 24] ^ *((_DWORD *)v4 - 34);
-  v8 = something8[(unsigned __int8)v10] ^ something7[(unsigned __int16)((_WORD)v11 >> 8)] ^ something6[((unsigned int)v12 >> 16) & 0xFF] ^ something5[(unsigned int)v13 >> 24] ^ *((_DWORD *)v4 - 33);
+  int i;
+  for (i=0;i<4;i++)
+  {
+	/* PART 1: */
+	v10 = FifeTimesXOR(something4, v6, something3, v7, something2, v8, something1, v5, v4 ,-i*8+0); //3 => -21
+	v11 = FifeTimesXOR(something4, v7, something3, v8, something2, v5, something1, v6, v4 ,-i*8+1);
+	v12 = FifeTimesXOR(something4, v8, something3, v5, something2, v6, something1, v7, v4 ,-i*8+2);
+	v13 = FifeTimesXOR(something4, v5, something3, v6, something2, v7, something1, v8, v4 ,-i*8+3); //3 => -18
+	/* PART 2: */
+	v5 = FifeTimesXOR(something4, v11, something3, v12, something2, v13, something1, v10, v4 ,-i*8-4); //3 => -28
+	v6 = FifeTimesXOR(something4, v12, something3, v13, something2, v10, something1, v11, v4 ,-i*8-3);
+	v7 = FifeTimesXOR(something4, v13, something3, v10, something2, v11, something1, v12, v4 ,-i*8-2);
+	v8 = FifeTimesXOR(something4, v10, something3, v11, something2, v12, something1, v13, v4 ,-i*8-1); //3 => -22
+	//printf("Part1: end %d\n",-i*8-1);
+  }
+  /* PART x: */
+  v10 = FifeTimesXOR(something4, v6, something3, v7, something2, v8, something1, v5, v4 ,-32); 
+  v11 = FifeTimesXOR(something4, v7, something3, v8, something2, v5, something1, v6, v4 ,-31);
+  v12 = FifeTimesXOR(something4, v8, something3, v5, something2, v6, something1, v7, v4 ,-30); 
+  v13 = FifeTimesXOR(something4, v5, something3, v6, something2, v7, something1, v8, v4 ,-29);
+
+  /* PART last: */
+  v5 = FifeTimesXOR(something8, v11, something7, v12, something6, v13, something5, v10, v4 ,-36);
+  v6 = FifeTimesXOR(something8, v12, something7, v13, something6, v10, something5, v11, v4 ,-35);
+  v7 = FifeTimesXOR(something8, v13, something7, v10, something6, v11, something5, v12, v4 ,-34);
+  v8 = FifeTimesXOR(something8, v10, something7, v11, something6, v12, something5, v13, v4 ,-33);
 LABEL_12:
   *(_DWORD *)source = v5;
   *((_DWORD *)source + 1) = v6;
@@ -308,14 +287,14 @@ signed int __stdcall EncryptAES(char* source, int size)
 }
 
 
-int DecryptPacketAES(char* buf)
+int DecryptPacket(char* buf)
 {
-	DecryptAES(buf+3,int(*(PWORD(buf))-3));
+	return DecryptAES(buf+3,int(*(PWORD(buf))-3));
 }
 
-int EncryptPacketAES(char* buf)
+int EncryptPacket(char* buf)
 {
-	EncryptAES(buf+3,int(*(PWORD(buf))-3));
+	return EncryptAES(buf+3,int(*(PWORD(buf))-3));
 }
 
 long DecryptTable(unsigned long index, unsigned char *buf, unsigned long len)
@@ -325,7 +304,6 @@ long DecryptTable(unsigned long index, unsigned char *buf, unsigned long len)
 
 	index &= 0x3F;
 	index <<= 8;
-
 	while (len--)
 		buf[len] = DecryptTableData[index + buf[len]];
 
