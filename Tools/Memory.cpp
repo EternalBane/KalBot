@@ -52,14 +52,10 @@ void CMemory::placeJMP(BYTE *pAddress, DWORD dwJumpTo, DWORD dwLen){
 	DWORD dwOldProtect, dwBkup, dwRelAddr;
 
 	VirtualProtect(pAddress, dwLen, PAGE_EXECUTE_READWRITE, &dwOldProtect);
-	cout << "Placing jump\n";
 
 	dwRelAddr = (DWORD) (dwJumpTo - (DWORD) pAddress) - 5;   
-	cout << pAddress << " " << *pAddress << '\n';
 	*pAddress = 0xE9; // placing JMP opcode at dest address
-	cout << "Placing jump\n";
 	*((DWORD *)(pAddress + 0x1)) = dwRelAddr; // placing JMP address to our hooked func
-	cout << "Placing jump\n";
 	// Overwrite the rest of the bytes with NOPs
 	for(DWORD x = 0x5; x < dwLen; x++)
 		*(pAddress + x) = 0x90; 

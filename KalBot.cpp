@@ -10,7 +10,10 @@ extern HANDLE hThread;
 extern HWND prnt_hWnd;
 extern HMODULE inj_hModule;
 extern HWND textEdit;
-extern int (__cdecl* SendPacket)(DWORD,LPCSTR,...);
+
+extern DWORD WINAPI monitorRecv(void *pParams);
+extern DWORD WINAPI monitorSend(void *pParams);
+extern DWORD WINAPI monitorStats(void *pParams);
 
 DWORD WINAPI windowThread(LPVOID lpParam)
 {
@@ -37,38 +40,12 @@ DWORD WINAPI windowThread(LPVOID lpParam)
 DWORD WINAPI mainThread(void * pParams)
 {
 	Sleep(2000);
-	CMemory::myAllocConsole(L"Test");
 	KalTools::HookIt();
 	KalTools::hookIATRecv();
 	KalTools::hookIATSend();
-
-	string text;
-	int option;
-	while(1)
-	{
-		cout << "1. Send text\n2. Login\nOption: ";
-		cin >> option;
-		switch(option)
-		{
-		case 1:
-			system("cls");
-			cout << "Text to send: ";
-			cin >> text;
-			SendPacket(0x0e,"s",text.c_str());
-			cout << "Your message has been sent [" << text << "]\n";
-			break;
-		case 2:
-			system("cls");
-			SendPacket(0x02,"ss","p_KrychoPL","lOp85RxH");
-			Sleep(3000);
-			SendPacket(0x75,"bs",0x0,"00000000");
-			cout << "Logging in...\n";
-			Sleep(3000);
-			SendPacket(0x0A,"dd",KalTools::getCharID(),0);
-		}
-		_getch();
-		system("cls");
-	}
+	CreateThread(0,NULL,&monitorRecv,NULL,NULL,NULL);
+	CreateThread(0,NULL,&monitorSend,NULL,NULL,NULL);
+	CreateThread(0,NULL,&monitorStats,NULL,NULL,NULL);
 
 	CloseHandle(hThread);
 	_endthreadex(0);

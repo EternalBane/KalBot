@@ -78,6 +78,12 @@
     <ClInclude Include="Decryption\Vari.h">
       <Filter>Pliki nagłówkowe\Decryption</Filter>
     </ClInclude>
+    <ClInclude Include="GameStruct.h">
+      <Filter>Pliki nagłówkowe\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Bot.h">
+      <Filter>Pliki nagłówkowe\Tools</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KalBot.cpp">
@@ -109,6 +115,9 @@
     </ClCompile>
     <ClCompile Include="Decryption\Crypt.cpp">
       <Filter>Pliki źródłowe\Decryption</Filter>
+    </ClCompile>
+    <ClCompile Include="Bot.cpp">
+      <Filter>Pliki źródłowe\Tools</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

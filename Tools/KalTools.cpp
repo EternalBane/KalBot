@@ -8,7 +8,6 @@ typedef void (__cdecl* Notice_org)(char*, int);
 typedef int (__cdecl * Chat_org)(char, char*, int);
 typedef int (__stdcall *myRecv)(SOCKET s, char *buf, int len, int flags);
 typedef int (__stdcall *mySend)(SOCKET s, char *buf, int len, int flags);
-typedef int (__cdecl *Send_org)(DWORD Header,LPCSTR szFormat,...);
 
 // Extern data from other files //
 extern HWND textEdit;
@@ -34,6 +33,8 @@ BYTE* KalTools::sendKey = 0;
 BYTE* KalTools::tableKey = 0;
 DWORD KalTools::syncClient = 0;
 DWORD KalTools::charID = 0;
+WORD KalTools::curHp = 0;
+Player KalTools::myPlayer = {};
 
 void KalTools::Log(string str)
 {
@@ -191,43 +192,6 @@ void KalTools::Notice(int color,char* mFormat,...)
 	delete[]mText;
 }
 
-void KalTools::SendEngine(DWORD Header,LPCSTR szFormat,...)
-{
-	//LogTextBox("PACKET TYPE:0x%02x FORMAT:%s",Header,szFormat);
-	//DWORD temp;
-	va_list args;
-	va_start(args, szFormat);
-	((Send_org)sendAdd)(Header,szFormat,args);
-	//int i,s;
-	//char* something;
-	//for (i=0;i<strlen(szFormat);i++)
-	//{
-	//	switch (szFormat[i])
-	//	{
-	//	case 'b': //BYTE
-	//		temp=va_arg( args, BYTE);
-	//		LogTextBox(" %d: %d\n",i+1,temp);
-	//		break;
-	//	case 'd': //DWORD
-	//		temp =(DWORD)va_arg( args, DWORD);
-	//		LogTextBox(" %d: %d\n",i+1,temp);
-	//		break;       
-	//	case 'w': //WORD
-	//		LogTextBox(" %d: %d\n",i+1,(WORD)va_arg( args, DWORD));
-	//		break;
-	//	case 's': //STRING
-	//		something=va_arg( args, char*);
-	//		char* somethings;
-	//		LogTextBox(" %d: %s\n",i+1,something);// wird ja garnet ausgegebn
-	//		break;
-	//	case 'm':
-	//		LogTextBox(" %d: %d\n",i+1,(DWORD)va_arg( args, DWORD));
-	//		break;
-	//	}
-	//}
-	va_end(args);
-}
-
 void KalTools::HookIt()
 {
 	// Chat BYTE pattern , char * mask //
@@ -235,20 +199,23 @@ void KalTools::HookIt()
 	char * mChat = "xxx????????xxxx"; // mask //
 
 	chatAdd = CMemory::dwFindPattern( 0x00400000,0x00700000,pChat,mChat);
-	LogTextBox("[Chat Address]: 0x%x",chatAdd);
+	LogTextBox("[Chat Address]: 0x%x ",chatAdd);
 
 	// Notice BYTE pattern , char * mask //
 	BYTE pNotice[] = {0x55,0x8B,0xEC,0x83,0x3D,0x5C,0x2B,0x86,0x00,0x00,0x74,0x34,0x8B,0x45,0x0C,0x50}; // pattern //
 	char * mNotice = "xxx???????xxxxxx"; // mask //
 
 	noticeAdd = CMemory::dwFindPattern( 0x00400000,0x00700000,pNotice,mNotice);  // obtain address //
-	LogTextBox("[Notice Address]: 0x%x",noticeAdd);
+	LogTextBox("[Notice Address]: 0x%x ",noticeAdd);
 
 	DWORD dwEngineSendA = CMemory::dwFindPattern(0x401000,0x2bc000,(BYTE*)"\x55\x8B\xEC\x83\xEC\x18\x83\x3D\x00\x00\x00\x00\x00\x00\x00\x33\xC0","xxxxxxxx???????xx");
 	sendAdd = CMemory::dwFindPattern(dwEngineSendA+1,0x2bc000,(BYTE*)"\x55\x8B\xEC\x83\xEC\x18\x83\x3D\x00\x00\x00\x00\x00\x00\x00\x33\xC0","xxxxxxxx???????xx");
-	LogTextBox("[Send Address]: 0x%x",sendAdd);
+	LogTextBox("[Send Address]: 0x%x ",sendAdd);
 
 	tableKey = (BYTE*)*((DWORD*)(sendAdd+0xCA)); 
+	LogTextBox("[Table Key]: 0x%X ",*tableKey);
+
+	CMemory::placeJMP((BYTE*)&KalTools::SendEngine,sendAdd,sizeof(&KalTools::SendEngine));
 }
 
 // ------------- Hooking recv --------------- //
@@ -267,7 +234,7 @@ __declspec(naked) void fRecv()
 	if(logPacket)
 	{
 		KalTools::LogTextBoxPacket(buf,"Server->Client: ");
-		KalTools::interpreter(buf);
+		KalTools::recvInterpreter(buf);
 	}
 
 	__asm POPFD
@@ -312,16 +279,35 @@ void KalTools::hookIATSend()
 
 // ------ End of send hooks ----- //
 
-void KalTools::interpreter(char *packet)
+void KalTools::recvInterpreter(char *packet)
 {
 	Player player;
 	Monster monster;
-	if(packet[2] == 0x32)
+	int namelen;
+	BYTE header = packet[2];
+	DWORD monsterID;
+	switch(header)
 	{
-		//player appear
+	case RPacket::welcome:
+		sendKey = (BYTE*)*((DWORD*)(sendAdd+0xA5));
+		LogTextBox("Send key captured: 0x%X ",*sendKey);
+		Login("p_KrychoPL","lOp85RxH","00000000");
+		/*for(int i=0;i<540;i++)
+		{
+		LogTextBoxNl(" 0x%X, ",*(sendKey+i));  // dumping AES key table
+		}
+		LogTextBox(" ");*/
+		break;
+	case RPacket::playerAppear:
 		memcpy((void*)&player.id,(void*)((DWORD)packet+3),4); // player id
 		memcpy((void*)&player.name,(void*)((DWORD)packet+7),16); // player name
-		int namelen = strlen(player.name);
+		namelen = strlen(player.name);
+		LogTextBox("Found new player: %s ",player.name);
+		if(!strcmp(player.name,"SeaM"))
+		{
+			myPlayer.id = player.id;
+			LogTextBox("Assigned main player id: %d ",myPlayer.id);
+		}
 		memcpy(&player.classe,(packet+8+namelen),1); // player class
 		memcpy(&player.x,(packet+9+namelen),4); // player x
 		memcpy(&player.y,(void*)((DWORD)packet+13+namelen),4); // player y
@@ -342,41 +328,63 @@ void KalTools::interpreter(char *packet)
 				break;
 			case 3:
 				strcpy_s(playerClass,"Thief");
+			default:
+				strcpy_s(playerClass,"????");
 			}
 			Chat(Color::pink," Player: %s ID: %d",player.name,player.id);
 			Chat(Color::pink," Class: %s X: %d Y: %d Z: %d",playerClass,player.x,player.y,player.z);
 		}
-	}
-	if(packet[2] == 0x33)
-	{
-		//mob apear
+		break;
+	case RPacket::mobAppear:
 		memcpy(&(monster.classe),(packet+3),2);
 		memcpy(&(monster.id),(packet+5),4);
 		memcpy(&(monster.x),(packet+9),4);
 		memcpy(&(monster.y),(packet+13),4);
 		memcpy(&(monster.z),(packet+17),2);
 		memcpy(&(monster.HP),(packet+19),2);
-		Chat(Color::violett," Mob: %d(%d) X: %d Y: %d Z: %d HP: %d",monster.classe,monster.id,monster.x,monster.y,monster.z,monster.HP);
-	}
-	if(packet[2] == 0x2a)
-	{
-		sendKey = (BYTE*)*((DWORD*)(sendAdd+0xA5));
-		LogTextBox("Send key captured: 0x%X ",*sendKey);
-
-		/*for(int i=0;i<540;i++)
+		Chat(Color::violett," Mob: %d(%d) X: %d Y: %d HP: %d",monster.classe,monster.id,monster.x,monster.y,monster.HP);
+		break;
+	case RPacket::charInfo:
+		charID = *(DWORD*)&packet[9];
+		LogTextBox("Char found id: %d ",charID);
+		//SendEngine(0x0a,"dd",charID,0);
+		//SendEngine(0x0b,"b",1);
+		break;
+	case RPacket::stateChange:
+		if(packet[3] == 0x07)
+			curHp    = *(WORD *)&packet[4];
+		break;
+	case RPacket::mobAnimation:
+		monsterID = *(DWORD*)&packet[7];
+		if(*(DWORD*)&packet[7] == myPlayer.id)
 		{
-		LogTextBoxNl(" 0x%X, ",*(sendKey+i));  // dumping AES key table
+			LogTextBox("Attacking monster id: %d ", *(DWORD*)&packet[3]);
+			SendEngine(0x0D,"b",0xD);
+			SendEngine(0x0C,"bdd",1,*(DWORD*)&packet[3],0);
 		}
-		LogTextBox(" ");*/
+		SendEngine(0x0D,"bbd",1,1,monsterID);
 	}
-	if(packet[2] == 0x09)
+}
+
+void KalTools::sendInterpreter(char *packet)
+{
+	BYTE header = packet[2];
+	string message;
+	switch(header)
 	{
+	case SPacket::checkVer:
 		memcpy(&syncClient,packet+3,2);
 		LogTextBox("Sync client: 0x%X ",syncClient);
+		break;
+	case SPacket::chat:
+		message.assign(packet+7,packet + *(PWORD)(packet));
+		LogTextBox("Chat: %s ",message.c_str());
 	}
-	if(packet[2] == 0x11)
-	{
-		charID=*(DWORD*)&packet[9];
-		LogTextBox("Found char ID: %d ",charID);
-	}
+}
+
+void KalTools::Login(string id, string pass, string secPass)
+{
+	SendEngine(0x02,"ss",id.c_str(),pass.c_str());
+	Sleep(2000);
+	SendEngine(0x75,"bs",0x0,secPass.c_str());
 }

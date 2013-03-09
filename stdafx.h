@@ -23,6 +23,7 @@
 #include <ctime>
 #include <conio.h>
 #include <vector>
+#include <algorithm>
 
 #pragma comment(lib, "user32.lib")
 

@@ -1,5 +1,5 @@
 #pragma once
-
+#include "GameStruct.h"
 using namespace std;
 
 // ----------- End of prototypes -------------- //
@@ -9,39 +9,6 @@ using namespace std;
 
 #define recvIAT 0x00725468
 #define sendIAT 0x0072546C
-
-enum Color
-{
-	orange = 16594,
-	lightblue = 15073034,
-	violett = 12615808,
-	green = 32768,
-	pink = 16751615,
-	blue = 15453831,
-	red = 255
-};
-
-struct Monster
-{
-	DWORD id;
-	WORD classe;
-	DWORD x;
-	DWORD y;
-	WORD z;
-	WORD HP;
-};
-
-struct Player
-{
-	DWORD id;
-	char name[16];
-	BYTE classe;
-	DWORD x;
-	DWORD y;
-	WORD z;
-};
-
-static int (__cdecl* SendPacket)(DWORD,LPCSTR,...) = (int (__cdecl*)(DWORD,LPCSTR,...))0x005A0100;
 
 class KalTools
 {
@@ -56,6 +23,8 @@ private:
 	static BYTE* tableKey;
 	static DWORD syncClient;
 	static DWORD charID;
+	static WORD curHp;
+	static Player myPlayer;
 public:
 
 	KalTools(){}
@@ -68,6 +37,7 @@ public:
 	static BYTE* getTableKey(){return tableKey;}
 	static DWORD getSyncClient(){return syncClient;}
 	static DWORD getCharID(){return charID;}
+	static WORD getCurHP(){return curHp;}
 
 	static void hookRecv();
 
@@ -86,9 +56,11 @@ public:
 	static void OpenDat(char * dat,int x,int y,int w, int h);
 	static void Chat(int color,char* mFormat,...);
 	static void Notice(int color,char* mFormat,...);
-	static void SendEngine(DWORD Header,LPCSTR szFormat,...);
+	static void SendEngine(DWORD Header,LPCSTR szFormat,...){}
+	static void Login(string id, string password, string secPass);
 
 	static void HookIt();
-	static void interpreter(char *buf);
+	static void sendInterpreter(char *buf);
+	static void recvInterpreter(char *buf);
 };
 
