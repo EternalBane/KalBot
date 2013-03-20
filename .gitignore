@@ -23,3 +23,6 @@ Debug/MainWindow.obj
 Debug/Memory.obj
 Debug/Recv.obj
 Debug/Send.obj
+Debug/Bot.obj
+Debug/Bot.obj
+Debug/Crypt.obj

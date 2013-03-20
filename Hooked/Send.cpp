@@ -10,7 +10,7 @@ extern long DecryptTable(unsigned long index, unsigned char *buf, unsigned long 
 extern int DecryptPacket(char* buf);
 
 string sendPacket;
-BYTE ignoreSend[] = {0x03,0x11,0x12};
+BYTE ignoreSend[] = {0x03,0x11};
 
 DWORD WINAPI monitorSend(void *pParams)
 {
@@ -52,5 +52,6 @@ DWORD WINAPI monitorSend(void *pParams)
 int fSendIAT(SOCKET s, char *buf, int len, int flags)
 {
 	sendPacket.assign(buf,buf+len);
+	KalTools::LogPacket(buf,"[SEND]");
 	return oldSend(s,buf,len,flags);
 }

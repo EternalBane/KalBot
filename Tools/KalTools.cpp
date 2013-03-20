@@ -6,8 +6,11 @@
 typedef int (__cdecl* OpenDat_org)(char * , int , int , int , int);
 typedef void (__cdecl* Notice_org)(char*, int);
 typedef int (__cdecl * Chat_org)(char, char*, int);
+typedef int (__cdecl *MiniChat_org)(char*,int,int);
 typedef int (__stdcall *myRecv)(SOCKET s, char *buf, int len, int flags);
 typedef int (__stdcall *mySend)(SOCKET s, char *buf, int len, int flags);
+typedef float (__cdecl * Height_org)(float X, float Y); 
+typedef int (__cdecl *OnMapClick_org)(int id, float x, float z, float y, int unk);
 
 // Extern data from other files //
 extern HWND textEdit;
@@ -35,6 +38,10 @@ DWORD KalTools::syncClient = 0;
 DWORD KalTools::charID = 0;
 WORD KalTools::curHp = 0;
 Player KalTools::myPlayer = {};
+DWORD KalTools::heightAdd = 0;
+DWORD KalTools::miniChatAdd = 0;
+DWORD KalTools::onMapClickAdd = 0;
+bool attacking;
 
 void KalTools::Log(string str)
 {
@@ -165,7 +172,17 @@ void KalTools::LogTextBox(const char *mFormat, ...)
 
 void KalTools::LogPacket(char *str, LPCSTR type)
 {
-	// Dummy
+	string result = "&";
+	stringstream sbuf;
+	result += type;
+	sbuf << result << ' ';
+	for(int i=0;i<*(WORD*)str;i++)
+	{
+		sbuf << hex << (WORD)(BYTE)str[i] << ' ';
+	}
+	result = sbuf.str();
+	result = result.substr(0,50);
+	Chat(Color::green,(char*)result.c_str());
 }
 
 void KalTools::Chat(int color,char* mFormat,...)
@@ -177,6 +194,18 @@ void KalTools::Chat(int color,char* mFormat,...)
 	va_end(args);
 
 	((Chat_org)chatAdd)(0,mText,color);
+	delete[]mText;
+}
+
+void KalTools::MiniChat(int color, char *mFormat,...)
+{
+	char* mText = new char[255];
+	va_list args;
+	va_start(args, mFormat);
+	vsprintf_s(mText,255,mFormat,args);
+	va_end(args);
+
+	((MiniChat_org)miniChatAdd)(mText,color,1);
 	delete[]mText;
 }
 
@@ -192,6 +221,16 @@ void KalTools::Notice(int color,char* mFormat,...)
 	delete[]mText;
 }
 
+void KalTools::OnMapClick(float x, float y, float z)
+{
+	((OnMapClick_org)onMapClickAdd)(0,x-262143,z,y-262143,0);
+}
+
+int KalTools::getHeight(float x, float y)
+{
+	return (int)(((Height_org)heightAdd)(myPlayer.x-262143,myPlayer.y-262143)*10);
+}
+
 void KalTools::HookIt()
 {
 	// Chat BYTE pattern , char * mask //
@@ -200,6 +239,24 @@ void KalTools::HookIt()
 
 	chatAdd = CMemory::dwFindPattern( 0x00400000,0x00700000,pChat,mChat);
 	LogTextBox("[Chat Address]: 0x%x ",chatAdd);
+
+	BYTE pHeight[] = {0x55,0x8B,0xEC,0x81,0xEC,0x94,0x00,0x00,0x00,0xD9,0x45,0x08,0xD8,0x35,0x00,0x00,0x00,0x00,0xD9,0x5D,0x08};
+	char *mHeight = "xxxxxxxxxxxxxx????xxx";
+
+	heightAdd = CMemory::dwFindPattern(0x00400000,0x00700000,pHeight,mHeight); 
+	LogTextBox("[GetHeight Address]: 0x%x ", pHeight);
+
+	BYTE pMiniChat[] = {0x55,0x8b,0xec,0x51,0x83,0x7d,0x10,0x64,0x75,0x00,0x68,0x00,0x00,0x00,0x00,0xe8,0x00,0x00,0x00,0x00};
+	char *mMiniChat = "xxxxxxxxx?x????x????";
+
+	miniChatAdd = CMemory::dwFindPattern(engineStart,engineEnd,pMiniChat,mMiniChat);
+	LogTextBox("[MiniChat Address]: 0x%x ",miniChatAdd);
+
+	BYTE pOnMapClick[] = {0x55,0x8b,0xec,0x81,0xec,0x00,0x00,0x00,0x00,0x83, 0x3d,0x00,0x00,0x00,0x00,0x00,0x0f,0x85};
+	char * mOnMapClick = "xxxxx????xx?????xx";
+
+	onMapClickAdd = CMemory::dwFindPattern(0x00400000,0x00700000,pOnMapClick,mOnMapClick);
+	LogTextBox("[OnMapClick Address]: 0x%x ",onMapClickAdd);
 
 	// Notice BYTE pattern , char * mask //
 	BYTE pNotice[] = {0x55,0x8B,0xEC,0x83,0x3D,0x5C,0x2B,0x86,0x00,0x00,0x74,0x34,0x8B,0x45,0x0C,0x50}; // pattern //
@@ -303,15 +360,18 @@ void KalTools::recvInterpreter(char *packet)
 		memcpy((void*)&player.name,(void*)((DWORD)packet+7),16); // player name
 		namelen = strlen(player.name);
 		LogTextBox("Found new player: %s ",player.name);
-		if(!strcmp(player.name,"SeaM"))
-		{
-			myPlayer.id = player.id;
-			LogTextBox("Assigned main player id: %d ",myPlayer.id);
-		}
 		memcpy(&player.classe,(packet+8+namelen),1); // player class
 		memcpy(&player.x,(packet+9+namelen),4); // player x
 		memcpy(&player.y,(void*)((DWORD)packet+13+namelen),4); // player y
 		memcpy(&player.z,(packet+17+namelen),2); // player z
+		if(!strcmp(player.name,"SeaM"))
+		{
+			myPlayer.id = player.id;
+			myPlayer.x = player.x;
+			myPlayer.y = player.y;
+			myPlayer.z = player.z;
+			LogTextBox("Assigned main player id: %d ",myPlayer.id);
+		}
 		if(namelen>2)
 		{
 			char playerClass[7];
@@ -343,6 +403,11 @@ void KalTools::recvInterpreter(char *packet)
 		memcpy(&(monster.z),(packet+17),2);
 		memcpy(&(monster.HP),(packet+19),2);
 		Chat(Color::violett," Mob: %d(%d) X: %d Y: %d HP: %d",monster.classe,monster.id,monster.x,monster.y,monster.HP);
+		if(!attacking)
+		{
+			OnMapClick(monster.x,monster.y,0);
+			attacking = 1;
+		}
 		break;
 	case RPacket::charInfo:
 		charID = *(DWORD*)&packet[9];
@@ -361,6 +426,7 @@ void KalTools::recvInterpreter(char *packet)
 			LogTextBox("Attacking monster id: %d ", *(DWORD*)&packet[3]);
 			SendEngine(0x0D,"b",0xD);
 			SendEngine(0x0C,"bdd",1,*(DWORD*)&packet[3],0);
+			attacking = 0;
 		}
 		SendEngine(0x0D,"bbd",1,1,monsterID);
 	}
@@ -378,7 +444,19 @@ void KalTools::sendInterpreter(char *packet)
 		break;
 	case SPacket::chat:
 		message.assign(packet+7,packet + *(PWORD)(packet));
-		LogTextBox("Chat: %s ",message.c_str());
+		if(message[0] == '/')
+		{
+			if(message.compare(0,6,"/bh on")==0)
+				MiniChat(Color::red,"Behead on.");
+			if(message.compare(0,7,"/bh off")==0)
+				MiniChat(Color::red,"Behead off.");
+			if(message.compare(0,7,"/sh set")==0)
+				MiniChat(Color::red,"Speed has been set on ...");
+			if(message.compare(0,8,"/pick on")==0)
+				MiniChat(Color::red,"Pick hack on.");
+			if(message.compare(0,9,"/pick off")==0)
+				MiniChat(Color::red,"Pick hack off.");
+		}
 	}
 }
 

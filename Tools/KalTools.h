@@ -18,6 +18,9 @@ private:
 
 	static DWORD chatAdd;
 	static DWORD noticeAdd;
+	static DWORD heightAdd;
+	static DWORD miniChatAdd;
+	static DWORD onMapClickAdd;
 	static DWORD sendAdd;
 	static BYTE* sendKey;
 	static BYTE* tableKey;
@@ -38,6 +41,7 @@ public:
 	static DWORD getSyncClient(){return syncClient;}
 	static DWORD getCharID(){return charID;}
 	static WORD getCurHP(){return curHp;}
+	static Player getMyPlayer(){return myPlayer;}
 
 	static void hookRecv();
 
@@ -56,8 +60,11 @@ public:
 	static void OpenDat(char * dat,int x,int y,int w, int h);
 	static void Chat(int color,char* mFormat,...);
 	static void Notice(int color,char* mFormat,...);
+	static void MiniChat(int color,char *mFormat,...);
 	static void SendEngine(DWORD Header,LPCSTR szFormat,...){}
 	static void Login(string id, string password, string secPass);
+	static void OnMapClick(float x, float y, float z);
+	static int getHeight(float x, float y);
 
 	static void HookIt();
 	static void sendInterpreter(char *buf);
