@@ -348,7 +348,7 @@ void KalTools::recvInterpreter(char *packet)
 	case RPacket::welcome:
 		sendKey = (BYTE*)*((DWORD*)(sendAdd+0xA5));
 		LogTextBox("Send key captured: 0x%X ",*sendKey);
-		Login("p_KrychoPL","lOp85RxH","00000000");
+		Login("test","test","00000000");
 		/*for(int i=0;i<540;i++)
 		{
 		LogTextBoxNl(" 0x%X, ",*(sendKey+i));  // dumping AES key table
